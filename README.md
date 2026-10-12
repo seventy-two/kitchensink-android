@@ -1,6 +1,6 @@
 # kitchensink for Android
 
-A native dashboard for a kitchensink server on phones, tablets and Android
+A native dashboard for a [kitchensink](https://github.com/seventy-two/kitchensink) server on phones, tablets and Android
 TV: every monitor as a live panel, recent events alongside, and a
 notification for each new event. It's Kotlin and Jetpack Compose, one APK
 for all three.
@@ -94,3 +94,7 @@ look at them:
 | `notify/Notifier.kt`, `service/LiveService.kt` | notifications, and staying connected in the background |
 | `ui/` | the screens: panels, blocks, summaries, Recent, settings |
 | `draw/` | the weather icons and the cat, drawn from shapes |
+
+## Licence
+
+MIT
