@@ -35,7 +35,7 @@ data class OledCare(
 enum class TvMode { Auto, On, Off }
 
 @Serializable
-enum class ThemeChoice { System, Light, Dark }
+enum class ThemeChoice { System, Light, Dark, Retro }
 
 @Serializable
 data class Config(

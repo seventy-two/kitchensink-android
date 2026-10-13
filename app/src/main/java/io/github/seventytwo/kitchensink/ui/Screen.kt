@@ -26,11 +26,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -49,6 +55,8 @@ import io.github.seventytwo.kitchensink.model.oledSwapSides
 import io.github.seventytwo.kitchensink.model.useCompact
 import io.github.seventytwo.kitchensink.model.withoutPrivate
 import io.github.seventytwo.kitchensink.net.ConnState
+import java.time.LocalDateTime
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /** Everything the dashboard shows, so it can be drawn from tests as well as from the app. */
@@ -103,7 +111,7 @@ fun orderedPanels(snapshots: List<Snapshot>, config: Config): List<Snapshot> {
 fun DashboardScreen(state: ScreenState, cb: ScreenCallbacks) {
     val c = state.config
     val p = LocalPalette.current
-    BoxWithConstraints(Modifier.fillMaxSize().background(p.bg)) {
+    BoxWithConstraints(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(p.bgTop, p.bgBottom)))) {
         // OLED care moves everything round a small circle, inside a margin
         // left for it.
         val margin = if (c.oled.shift) 6.dp else 0.dp
@@ -111,11 +119,12 @@ fun DashboardScreen(state: ScreenState, cb: ScreenCallbacks) {
         val over = if (state.overscan) Modifier.padding(horizontal = 40.dp, vertical = 20.dp) else Modifier
         var compact by remember { mutableStateOf(true) }
         compact = useCompact(compact, maxWidth.value, maxHeight.value)
-        val metrics = Metrics.of(compact)
+        val metrics = Metrics.of(compact, retro = p.retro)
+        val side = if (state.overscan) 0.dp else 10.dp
         KitchensinkTheme(p, metrics) {
-            Column(over.padding(margin).offset(dx.dp, dy.dp).fillMaxSize().padding(horizontal = if (state.overscan) 0.dp else 10.dp)) {
-                Header(state, cb)
-                Box(Modifier.weight(1f).fillMaxWidth()) { Body(state, cb, compact) }
+            Column(over.padding(margin).offset(dx.dp, dy.dp).fillMaxSize()) {
+                Header(state, cb, side)
+                Box(Modifier.weight(1f).fillMaxWidth().padding(horizontal = side)) { Body(state, cb, compact) }
             }
         }
         // OLED care dims everything when there's been no touch or key press
@@ -126,8 +135,17 @@ fun DashboardScreen(state: ScreenState, cb: ScreenCallbacks) {
     }
 }
 
+/** The retro theme's clock, the WeatherStar way: "4:52:10 PM" and "MON 12 OCT". */
+fun retroClock(t: LocalDateTime): Pair<String, String> {
+    val days = listOf("MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN")
+    val months = listOf("JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC")
+    val h = if (t.hour % 12 == 0) 12 else t.hour % 12
+    val time = "%d:%02d:%02d %s".format(h, t.minute, t.second, if (t.hour < 12) "AM" else "PM")
+    return time to "${days[t.dayOfWeek.value - 1]} ${t.dayOfMonth} ${months[t.monthValue - 1]}"
+}
+
 @Composable
-private fun Header(state: ScreenState, cb: ScreenCallbacks) {
+private fun Header(state: ScreenState, cb: ScreenCallbacks, side: Dp) {
     val p = LocalPalette.current
     val mt = LocalMetrics.current
     val (status, dot) = when (state.conn) {
@@ -136,12 +154,38 @@ private fun Header(state: ScreenState, cb: ScreenCallbacks) {
         ConnState.Connected -> "Live" to p.good
         ConnState.Offline -> (if (state.error.isEmpty()) "Offline" else "Offline: ${state.error}") to p.bad
     }
-    Row(Modifier.fillMaxWidth().height(if (mt.gap < 12.dp) 44.dp else 52.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text("kitchensink", style = mt.title, color = p.text)
+    // The retro theme's title band, with an amber rule beneath.
+    val band = if (p.retro) {
+        Modifier.drawBehind {
+            drawRect(Brush.verticalGradient(listOf(Color(0xFF243CB4), Color(0xFF101E7A))))
+            val t = 3.dp.toPx()
+            drawRect(Brush.horizontalGradient(listOf(Color(0xFFE06200), Color(0xFFFFC81A))), Offset(0f, size.height - t), Size(size.width, t))
+        }
+    } else Modifier
+    Row(
+        Modifier.fillMaxWidth().height(if (mt.gap < 12.dp) 44.dp else 52.dp).then(band).padding(horizontal = side),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text("kitchensink", style = mt.title, color = p.heading)
         Spacer(Modifier.width(14.dp))
         Canvas(Modifier.size(8.dp)) { drawCircle(dot) }
         Spacer(Modifier.width(6.dp))
         Text(status, style = mt.caption, color = p.muted, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+        if (p.retro) {
+            val clock by produceState(retroClock(LocalDateTime.now())) {
+                while (true) {
+                    value = retroClock(LocalDateTime.now())
+                    delay(1000 - System.currentTimeMillis() % 1000)
+                }
+            }
+            Text(clock.first, style = mt.heading, color = p.text, maxLines = 1)
+            // The date only where there's room for it beside the status.
+            if (LocalConfiguration.current.screenWidthDp >= 600) {
+                Spacer(Modifier.width(10.dp))
+                Text(clock.second, style = mt.caption, color = p.heading, maxLines = 1)
+            }
+            Spacer(Modifier.width(12.dp))
+        }
         // Hide or show private figures, e.g. a portfolio: only there when a
         // monitor sends some.
         if (state.snapshots.any { it.hasPrivate() }) {

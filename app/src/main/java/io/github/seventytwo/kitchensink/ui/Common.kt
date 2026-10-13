@@ -19,6 +19,9 @@ import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
@@ -83,6 +86,21 @@ fun Modifier.tappable(enabled: Boolean = true, shape: Shape = RectangleShape, on
     return this
         .then(if (focused) Modifier.border(2.dp, p.accent, shape) else Modifier)
         .clickable(source, ripple(), enabled = enabled, onClick = onClick)
+}
+
+/** Raises a panel in the retro theme: lit along its top and left, shaded along its bottom and right. */
+@Composable
+fun Modifier.bevel(): Modifier {
+    val p = LocalPalette.current
+    if (!p.retro) return this
+    return drawWithContent {
+        drawContent()
+        val t = 2.dp.toPx()
+        drawRect(p.bevelLight, Offset.Zero, Size(size.width, t))
+        drawRect(p.bevelLight, Offset.Zero, Size(t, size.height))
+        drawRect(p.bevelDark, Offset(0f, size.height - t), Size(size.width, t))
+        drawRect(p.bevelDark, Offset(size.width - t, 0f), Size(t, size.height))
+    }
 }
 
 /** A small flat icon button, muted until it has focus. */

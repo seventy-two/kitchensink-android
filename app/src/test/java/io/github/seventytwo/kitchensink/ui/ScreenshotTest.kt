@@ -89,6 +89,21 @@ class ScreenshotTest {
     fun tv() = shot("tv", Palette.Oled, state(configured.copy(cat = true, oled = OledCare(black = true, shift = true)), tv = true))
 
     @Test @Robo(qualifiers = "w411dp-h891dp-port-xxhdpi")
+    fun phoneRetro() = shot("phone-retro", Palette.Retro, state(configured.copy(theme = io.github.seventytwo.kitchensink.data.ThemeChoice.Retro)))
+
+    // TV mode on a TV draws everything a fifth smaller, as the app does.
+    @Test @Robo(qualifiers = "w960dp-h540dp-land-television-xhdpi")
+    fun tvSmaller() {
+        compose.setContent {
+            val d = androidx.compose.ui.platform.LocalDensity.current
+            CompositionLocalProvider(androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(d.density * 0.8f, d.fontScale)) {
+                Themed(Palette.Retro) { DashboardScreen(state(configured.copy(cat = true), tv = true), ScreenCallbacks.None) }
+            }
+        }
+        compose.onRoot().captureRoboImage("build/screenshots/tv-smaller-retro.png")
+    }
+
+    @Test @Robo(qualifiers = "w411dp-h891dp-port-xxhdpi")
     fun notSetUp() = shot("not-set-up", s = state(Config()).copy(conn = ConnState.NotConfigured, snapshots = emptyList()))
 
     @Test @Robo(qualifiers = "w411dp-h891dp-port-xxhdpi")

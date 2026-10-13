@@ -19,7 +19,9 @@ for all three.
   the panels; narrower, the panels and Recent are two pages, swiped between,
   with a dot on Recent's tab for anything new.
 - **TV mode** (on by itself on Android TV, or on in settings for a tablet
-  on the wall): stays on, full screen, with room for overscan on a TV. A
+  on the wall): stays on, full screen, with room for overscan on a TV, and
+  on a TV everything a fifth smaller than Android TV's own size, so a big
+  screen fits more. A
   remote's D-pad moves between rows, buttons and events, outlined in the
   accent colour, and select opens or closes a panel.
 - **Notifications** for new events while the dashboard isn't on screen,
@@ -39,9 +41,14 @@ for all three.
   clears them all. Cleared events stay cleared after a restart.
 - **OLED care** and the **cat**, as on Windows: shift, true black, dim when
   idle (after ten minutes without a touch or key press), swap sides, and a
-  black cat asleep above Recent.
+  black cat asleep above Recent, who wakes now and then to wash, scratch,
+  slow-blink at you, pounce, drink from a bowl of milk or hunt a toy mouse.
+- **Retro** theme, as on Windows: after the Weather Channel's 90s
+  WeatherStar screens, with a blue sky fading to purple, bevelled panels,
+  bold shadowed lettering, yellow headings, an amber rule under the title
+  and a clock (with the date where there's room).
 - Panel order is set in settings, with up and down buttons.
-- Light, dark or the system's theme. Settings live in the app's private
+- Light, dark, retro or the system's theme. Settings live in the app's private
   storage; the token is encrypted with a key in the Android Keystore.
 
 ## Setting up

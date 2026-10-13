@@ -62,7 +62,7 @@ fun BlockView(monitor: String, b: Block) {
     val p = LocalPalette.current
     val mt = LocalMetrics.current
     Column(Modifier.fillMaxWidth()) {
-        if (b.title.isNotEmpty()) Text(b.title, style = mt.caption, color = p.muted)
+        if (b.title.isNotEmpty()) Text(b.title, style = mt.caption, color = p.blockTitle)
         when (b.type) {
             "stats" -> StatsBlock(b.stats)
             "table" -> TableBlock(b)

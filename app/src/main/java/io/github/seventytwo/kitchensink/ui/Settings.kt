@@ -122,7 +122,7 @@ fun SettingsScreen(
 
     Box(Modifier.fillMaxSize().background(p.bg), contentAlignment = Alignment.TopCenter) {
         Column(Modifier.widthIn(max = 560.dp).fillMaxWidth().verticalScroll(rememberScrollState()).padding(20.dp)) {
-            Text("Settings", style = mt.title, color = p.text)
+            Text("Settings", style = mt.title, color = p.heading)
             heading("Server address")
             OutlinedTextField(
                 draft.url, { draft = draft.copy(url = it) }, Modifier.fillMaxWidth(), singleLine = true,
@@ -171,14 +171,20 @@ fun SettingsScreen(
                 draft.tv,
             ) { draft = draft.copy(tv = it) }
             Text("Theme", style = mt.caption, color = p.muted, modifier = Modifier.padding(top = 6.dp))
-            choice(listOf(ThemeChoice.System to "As the system", ThemeChoice.Light to "Light", ThemeChoice.Dark to "Dark"), draft.theme) {
+            choice(
+                listOf(ThemeChoice.System to "As the system", ThemeChoice.Light to "Light", ThemeChoice.Dark to "Dark", ThemeChoice.Retro to "Retro (the 90s Weather Channel)"),
+                draft.theme,
+            ) {
                 draft = draft.copy(theme = it)
             }
 
             heading("OLED care, against burn-in")
             fun care(f: (OledCare) -> OledCare) { draft = draft.copy(oled = f(draft.oled)) }
             toggle("Shift", draft.oled.shift, "moves everything a few pixels every three minutes") { v -> care { it.copy(shift = v) } }
-            toggle("True black", draft.oled.black, "a black theme with dimmer text and borders") { v -> care { it.copy(black = v) } }
+            val retro = draft.theme == ThemeChoice.Retro
+            toggle("True black", draft.oled.black && !retro, if (retro) "not with the retro theme" else "a black theme with dimmer text and borders", enabled = !retro) { v ->
+                care { it.copy(black = v) }
+            }
             toggle("Dim when idle", draft.oled.dim, "after ten minutes without a touch or key press") { v -> care { it.copy(dim = v) } }
             toggle("Swap sides", draft.oled.swap, "moves the Recent column across every other hour") { v -> care { it.copy(swap = v) } }
             heading("")

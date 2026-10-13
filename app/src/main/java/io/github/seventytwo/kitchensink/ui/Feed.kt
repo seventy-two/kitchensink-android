@@ -59,7 +59,7 @@ fun Feed(
     Column(modifier) {
         if (cat && catTime != null) Cat(catTime)
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text(if (heading) "Recent" else "", style = mt.heading, color = p.text, modifier = Modifier.weight(1f).padding(vertical = 6.dp))
+            Text(if (heading) "Recent" else "", style = mt.heading, color = p.heading, modifier = Modifier.weight(1f).padding(vertical = 6.dp))
             if (events.isNotEmpty()) IconButtonSmall(Icons.Filled.Close, "Clear all", size = 32.dp, onClick = onClearAll)
         }
         if (events.isEmpty()) {
@@ -85,7 +85,7 @@ private fun EventCard(e: Event, monitor: String, now: Long, onClear: () -> Unit,
     val p = LocalPalette.current
     val mt = LocalMetrics.current
     val pad = if (mt.gap < 12.dp) 8.dp else 10.dp
-    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min).background(p.card)) {
+    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min).background(p.card).bevel()) {
         if (e.priority == Priority.High && !e.quiet) Box(Modifier.width(3.dp).fillMaxHeight().background(p.accent))
         Column(
             Modifier.weight(1f).then(if (e.url.isNotEmpty()) Modifier.tappable(onClick = onOpen) else Modifier).padding(start = pad, top = pad * 0.8f, bottom = pad * 0.8f),
@@ -111,7 +111,7 @@ private fun Cat(time: () -> Double) {
             t = time()
         }
     }
-    val size = 1.1f
+    val size = 1.6f
     // Her space is 68 units tall: 64 above the floor (an arched tail), 4
     // below (rounded paws and her rim).
     Canvas(Modifier.fillMaxWidth().height((68 * size).dp)) {

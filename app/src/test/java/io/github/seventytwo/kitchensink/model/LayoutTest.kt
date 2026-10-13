@@ -92,3 +92,13 @@ class LayoutTest {
         assertTrue(feedBeside(891f))
     }
 }
+
+class RetroClockTest {
+    @Test
+    fun readsLikeTheWeatherStar() {
+        val t = java.time.LocalDateTime.of(2026, 10, 12, 16, 52, 10)
+        assertEquals("4:52:10 PM" to "MON 12 OCT", io.github.seventytwo.kitchensink.ui.retroClock(t))
+        assertEquals("12:05:00 AM", io.github.seventytwo.kitchensink.ui.retroClock(t.withHour(0).withMinute(5).withSecond(0)).first)
+        assertEquals("12:05:00 PM", io.github.seventytwo.kitchensink.ui.retroClock(t.withHour(12).withMinute(5).withSecond(0)).first)
+    }
+}

@@ -45,7 +45,7 @@ private val Slot = 36.dp
 @Composable
 private fun CardBox(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     val p = LocalPalette.current
-    Box(modifier.fillMaxWidth().background(p.card).border(1.dp, p.border)) { content() }
+    Box(modifier.fillMaxWidth().background(p.card).border(1.dp, p.border).bevel()) { content() }
 }
 
 /** The panel's subtitle, error and blocks. */

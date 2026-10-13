@@ -37,6 +37,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -176,9 +178,14 @@ class MainActivity : ComponentActivity() {
         val dark = when (config.theme) {
             ThemeChoice.System -> isSystemInDarkTheme()
             ThemeChoice.Light -> false
-            ThemeChoice.Dark -> true
+            ThemeChoice.Dark, ThemeChoice.Retro -> true
         }
-        val palette = if (config.oled.black) Palette.Oled else if (dark) Palette.Dark else Palette.Light
+        val palette = when {
+            config.theme == ThemeChoice.Retro -> Palette.Retro
+            config.oled.black -> Palette.Oled
+            dark -> Palette.Dark
+            else -> Palette.Light
+        }
         WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = !palette.dark
 
         val actions = remember {
@@ -208,8 +215,13 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        KitchensinkTheme(palette, Metrics.of(compact = true)) {
+        // On a big TV everything is a fifth smaller than Android TV's own
+        // size, so more fits.
+        val density = LocalDensity.current
+        val scaled = if (tv && isTvDevice) Density(density.density * TvScale, density.fontScale) else density
+        KitchensinkTheme(palette, Metrics.of(compact = true, retro = palette.retro)) {
             CompositionLocalProvider(
+                LocalDensity provides scaled,
                 LocalActions provides actions,
                 LocalTv provides tv,
                 LocalPanelState provides PanelState(ticked, refreshing.keys, time, drafts),
@@ -247,6 +259,9 @@ class MainActivity : ComponentActivity() {
     }
 
     private companion object {
+        /** How TV mode on a TV scales things, against Android TV's own size. */
+        const val TvScale = 0.8f
+
         fun now() = System.currentTimeMillis() / 1000
     }
 }

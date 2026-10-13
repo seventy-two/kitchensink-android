@@ -13,8 +13,8 @@ android {
         applicationId = "io.github.seventytwo.kitchensink"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1"
+        versionCode = 2
+        versionName = "0.2"
     }
 
     // A release key kept outside the repo, so each build installs over the
