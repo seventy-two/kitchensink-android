@@ -134,9 +134,9 @@ private val Leap = make(
     v(22f, -22f, 20f, -21f, -15f, -18f, -17f, -18f), v(30f, -16f, 28f, -15f, -24f, -10f, -25f, -9f),
     v(-21f, -24f, -27f, -25f, -33f, -26f, -38f, -27f, -43f, -27f, -47f, -26f, -50f, -25f, -52f, -24f), 1f, 0f,
 )
-/** Head down in a bowl in front of her, lapping. */
+/** Head down over a bowl in front of her, lapping: her chin at its rim and her tongue's tip in the milk, behind the rim. */
 private val Drink = make(
-    Vec2(14f, -11f), 8.5f, Vec2(2f, -14f), 9f, Vec2(-11f, -18f), 9.5f, Vec2(27f, -8f), 0.55f,
+    Vec2(14f, -11f), 8.5f, Vec2(2f, -14f), 9f, Vec2(-11f, -18f), 9.5f, Vec2(25f, -15f), 0.55f,
     v(15f, -7f, 12f, -7f, -12f, -12f, -14f, -12f), v(17f, 0f, 14f, 0f, -11f, 0f, -15f, 0f),
     v(-21f, -20f, -26f, -23f, -29f, -28f, -30f, -34f, -29f, -39f, -26f, -43f, -22f, -45f, -19f, -44f), 0.4f, 0f,
 )
