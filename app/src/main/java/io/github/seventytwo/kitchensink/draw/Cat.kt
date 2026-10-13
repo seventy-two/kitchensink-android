@@ -619,7 +619,7 @@ fun catAt(t: Double, half: Float): Cat {
 
 private val Fur = Color(17, 17, 21)
 private val Rim = Color(92, 98, 112, 170)
-private val Eye = Color(206, 216, 84)
+private val Eye = Color(92, 168, 245)
 private val Pupil = Color(8, 8, 10)
 private val Lid = Color(120, 124, 136, 220)
 private val Mouth = Color(176, 84, 100)
