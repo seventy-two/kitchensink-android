@@ -53,9 +53,17 @@ class Dashboard {
         if (i >= 0) snapshots[i] = s else snapshots += s
     }
 
-    /** Stores an event and reports whether it was new. Cleared ones aren't stored again, e.g. when history is replayed. */
+    /**
+     * Stores an event and reports whether it was new. One it has already is
+     * replaced, as the server updates events (e.g. a price move since
+     * changed). Cleared ones aren't stored again, e.g. when history is replayed.
+     */
     fun addEvent(e: Event): Boolean {
-        if (events.any { it.id == e.id }) return false
+        val had = events.indexOfFirst { it.id == e.id }
+        if (had >= 0) {
+            events[had] = e
+            return false
+        }
         lastEventId = maxOf(lastEventId, e.id)
         if (e.id <= cleared.through || e.id in cleared.ids) return false
         // Keep newest first; events nearly always arrive in order.

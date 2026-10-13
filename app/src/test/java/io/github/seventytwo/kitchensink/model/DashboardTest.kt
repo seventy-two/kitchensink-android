@@ -34,6 +34,10 @@ class DashboardTest {
         val m = Dashboard()
         assertTrue(m.addEvent(ev(2)))
         assertFalse(m.addEvent(ev(2)))
+        // An updated copy replaces it, without counting as new.
+        assertFalse(m.addEvent(Event(id = 2, title = "AMD down 0.71% today", quiet = true)))
+        assertEquals("AMD down 0.71% today", m.eventList.single().title)
+        assertTrue(m.eventList.single().quiet)
         assertTrue(m.addEvent(ev(5)))
         assertTrue(m.addEvent(ev(3)))
         assertEquals(listOf(5L, 3L, 2L), m.eventList.map { it.id })
