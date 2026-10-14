@@ -122,4 +122,16 @@ class ModelTest {
         assertEquals(listOf("Public"), hidden.blocks[0].stats.map { it.label })
         assertEquals("Symbol", hidden.blocks[1].columns[0].title)
     }
+
+    @Test
+    fun readsSummaryBlock() {
+        val s = parseSnapshot("""{"summaryBlock": {"type": "table", "columns": [{"title": "Today", "align": "right"}], "rows": [[{"text": "+3"}]]}}""")
+        assertEquals("table", s.summaryBlock?.type)
+        assertEquals(Align.Right, s.summaryBlock?.columns?.get(0)?.align)
+        assertEquals("+3", s.summaryBlock?.rows?.get(0)?.get(0)?.text)
+        assertEquals(null, parseSnapshot("{}").summaryBlock)
+        val mine = parseSnapshot("""{"summaryBlock": {"type": "table", "private": true}}""")
+        assertTrue(mine.hasPrivate())
+        assertEquals(null, mine.withoutPrivate().summaryBlock)
+    }
 }

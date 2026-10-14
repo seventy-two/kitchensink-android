@@ -117,6 +117,7 @@ fun CompactCard(s: Snapshot, show: Show, body: Dp, onToggle: (() -> Unit)?) {
                 fun summary(modifier: Modifier) {
                     Box(modifier) {
                         when {
+                            s.summaryBlock != null -> BlockView(s.monitor, s.summaryBlock)
                             s.summary.isNotEmpty() -> Summary(s.summary, s.summaryStyle)
                             s.blocks.isEmpty() && !failed -> Text("Waiting for the first check…", style = mt.body, color = p.muted)
                             else -> Text("Tap for details", style = mt.body, color = p.muted)

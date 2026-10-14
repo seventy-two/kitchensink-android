@@ -90,6 +90,8 @@ data class Snapshot(
     val summary: List<Stat> = emptyList(),
     /** "" for tiles, or "chips". */
     val summaryStyle: String = "",
+    /** A cut-down block shown instead of [summary] when it's given, e.g. a table's top rows. */
+    val summaryBlock: Block? = null,
 )
 
 data class Event(
@@ -195,6 +197,7 @@ fun parseSnapshot(e: JsonElement): Snapshot {
         blocks = j.array("blocks").map(::parseBlock),
         summary = j.array("summary").map(::parseStat),
         summaryStyle = j.str("summaryStyle"),
+        summaryBlock = (j["summaryBlock"] as? JsonObject)?.let(::parseBlock),
     )
 }
 
@@ -239,11 +242,12 @@ fun ago(then: Long, now: Long): String {
 
 /** Whether a snapshot has any private blocks or stats. */
 fun Snapshot.hasPrivate(): Boolean =
-    summary.any { it.isPrivate } || blocks.any { b -> b.isPrivate || b.stats.any { it.isPrivate } }
+    summary.any { it.isPrivate } || summaryBlock?.isPrivate == true || blocks.any { b -> b.isPrivate || b.stats.any { it.isPrivate } }
 
 /** The snapshot with its private blocks and stats left out, for when the user has hidden them. */
 fun Snapshot.withoutPrivate(): Snapshot = copy(
     summary = summary.filterNot { it.isPrivate },
+    summaryBlock = summaryBlock?.takeUnless { it.isPrivate },
     blocks = blocks
         .map { it.copy(stats = it.stats.filterNot { s -> s.isPrivate }) }
         // A stats block left with nothing goes too.
