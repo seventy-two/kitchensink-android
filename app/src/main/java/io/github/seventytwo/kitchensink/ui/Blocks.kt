@@ -20,6 +20,8 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Text
@@ -263,7 +265,7 @@ private fun ListBlock(b: Block) {
 }
 
 /**
- * Items with checkboxes, a delete button on each, and a box for new items
+ * Items with checkboxes, up, down and delete buttons on each (as the block has them), and a box for new items
  * if the block takes them. Each change goes to the monitor as an action;
  * ticks show at once, ahead of the server's snapshot.
  */
@@ -287,7 +289,11 @@ private fun ChecklistBlock(monitor: String, b: Block) {
                         color = if (done) p.muted else p.text, modifier = Modifier.padding(start = 6.dp, end = 4.dp),
                     )
                 }
-                IconButtonSmall(Icons.Filled.Close, "Delete", size = 32.dp, iconSize = 16.dp) { actions.delete(monitor, it.id) }
+                if (b.movable && !done) {
+                    IconButtonSmall(Icons.Filled.KeyboardArrowUp, b.upHint.ifEmpty { "Move up" }, size = 32.dp, iconSize = 18.dp) { actions.move(monitor, it.id, true) }
+                    IconButtonSmall(Icons.Filled.KeyboardArrowDown, b.downHint.ifEmpty { "Move down" }, size = 32.dp, iconSize = 18.dp) { actions.move(monitor, it.id, false) }
+                }
+                if (!b.noDelete) IconButtonSmall(Icons.Filled.Close, b.deleteHint.ifEmpty { "Delete" }, size = 32.dp, iconSize = 16.dp) { actions.delete(monitor, it.id) }
             }
         }
         if (b.items.isEmpty()) Text("Nothing to do.", style = mt.body, color = p.muted)

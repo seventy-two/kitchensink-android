@@ -3,7 +3,9 @@ package io.github.seventytwo.kitchensink.ui
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -110,6 +112,15 @@ class ScreenshotTest {
     fun settings() {
         compose.setContent { Themed { SettingsScreen(configured, snapshots, DeviceInfo(unrestricted = false), {}, {}, {}, {}) } }
         compose.onRoot().captureRoboImage("build/screenshots/settings.png")
+    }
+
+    // Tall enough to reach the diagnostics at the bottom.
+    @Test @Robo(qualifiers = "w411dp-h2400dp-port-xxhdpi")
+    fun settingsDiagnostics() {
+        compose.setContent { Themed { SettingsScreen(configured, snapshots, DeviceInfo(unrestricted = false), {}, {}, {}, {}) } }
+        compose.onNodeWithText("Mail").performClick()
+        compose.waitForIdle()
+        compose.onRoot().captureRoboImage("build/screenshots/settings-diagnostics.png")
     }
 
     @Test @Robo(qualifiers = "w960dp-h540dp-land-television-xhdpi")

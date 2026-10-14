@@ -17,6 +17,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
@@ -204,6 +205,25 @@ fun SettingsScreen(
                 if (draft.expanded.isNotEmpty() || draft.collapsed.isNotEmpty()) {
                     button("Forget panels opened or closed by hand", false, Modifier.padding(top = 6.dp)) {
                         draft = draft.copy(expanded = emptySet(), collapsed = emptySet())
+                    }
+                }
+            }
+
+            val background = panels.filter { it.background }
+            if (background.isNotEmpty()) {
+                heading("Diagnostics")
+                for (s in background) {
+                    var open by remember(s.monitor) { mutableStateOf(false) }
+                    Row(Modifier.fillMaxWidth().tappable { open = !open }.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(s.title.ifEmpty { s.monitor }, style = mt.body, color = p.text, modifier = Modifier.weight(1f))
+                        Icon(if (open) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown, if (open) "Hide" else "Show", tint = p.muted)
+                    }
+                    if (open) {
+                        Column(Modifier.fillMaxWidth().background(p.card).padding(10.dp)) {
+                            if (s.error.isNotEmpty()) Text(s.error, style = mt.caption, color = p.bad)
+                            for (b in s.blocks) BlockView(s.monitor, b)
+                            if (s.blocks.isEmpty()) Text("Nothing to show.", style = mt.caption, color = p.muted)
+                        }
                     }
                 }
             }

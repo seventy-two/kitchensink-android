@@ -57,6 +57,14 @@ data class Block(
     val text: String = "",
     /** A checklist takes new items when set. */
     val addHint: String = "",
+    /** What a checklist's delete does, when it isn't deleting. */
+    val deleteHint: String = "",
+    /** A checklist without delete buttons. */
+    val noDelete: Boolean = false,
+    /** A checklist whose items have up and down buttons, and what they do when it isn't moving them in the list. */
+    val movable: Boolean = false,
+    val upHint: String = "",
+    val downHint: String = "",
     val isPrivate: Boolean = false,
     val stats: List<Stat> = emptyList(),
     val columns: List<Column> = emptyList(),
@@ -73,6 +81,8 @@ data class Snapshot(
     val subtitle: String = "",
     /** When it was updated matters at the moment. */
     val timely: Boolean = false,
+    /** It only feeds other panels (the mail reader), so it's shown in the settings, not the dashboard. */
+    val background: Boolean = false,
     /** Unix seconds; 0 if never polled. */
     val updated: Long = 0,
     val blocks: List<Block> = emptyList(),
@@ -135,6 +145,11 @@ private fun parseBlock(e: JsonElement): Block {
         title = j.str("title"),
         text = j.str("text"),
         addHint = j.str("addHint"),
+        deleteHint = j.str("deleteHint"),
+        noDelete = j.flag("noDelete"),
+        movable = j.flag("movable"),
+        upHint = j.str("upHint"),
+        downHint = j.str("downHint"),
         isPrivate = j.flag("private"),
         stats = j.array("stats").map(::parseStat),
         columns = j.array("columns").map {
@@ -174,6 +189,7 @@ fun parseSnapshot(e: JsonElement): Snapshot {
         error = j.str("error"),
         subtitle = j.str("subtitle"),
         timely = j.flag("timely"),
+        background = j.flag("background"),
         // Go sends its zero time, year 1, for a monitor that hasn't polled yet.
         updated = maxOf(0, parseTime(j.str("updated"))),
         blocks = j.array("blocks").map(::parseBlock),

@@ -194,6 +194,7 @@ class MainActivity : ComponentActivity() {
                 override fun refresh(monitor: String) = hub.refresh(monitor)
                 override fun toggle(monitor: String, id: String, done: Boolean) = hub.toggle(monitor, id, done)
                 override fun delete(monitor: String, id: String) = hub.delete(monitor, id)
+                override fun move(monitor: String, id: String, up: Boolean) = hub.move(monitor, id, up)
                 override fun add(monitor: String, text: String) = hub.add(monitor, text)
             }
         }

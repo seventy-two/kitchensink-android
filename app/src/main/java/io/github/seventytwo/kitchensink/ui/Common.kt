@@ -39,6 +39,7 @@ interface Actions {
     fun refresh(monitor: String)
     fun toggle(monitor: String, id: String, done: Boolean)
     fun delete(monitor: String, id: String)
+    fun move(monitor: String, id: String, up: Boolean)
     fun add(monitor: String, text: String)
 
     object None : Actions {
@@ -46,6 +47,7 @@ interface Actions {
         override fun refresh(monitor: String) {}
         override fun toggle(monitor: String, id: String, done: Boolean) {}
         override fun delete(monitor: String, id: String) {}
+        override fun move(monitor: String, id: String, up: Boolean) {}
         override fun add(monitor: String, text: String) {}
     }
 }

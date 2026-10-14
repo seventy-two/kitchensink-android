@@ -176,6 +176,9 @@ class Hub(private val context: Context, private val store: ConfigStore, http: Ok
     fun delete(monitor: String, id: String) =
         client.act(monitor, buildJsonObject { put("type", "delete"); put("id", id) }.toString())
 
+    fun move(monitor: String, id: String, up: Boolean) =
+        client.act(monitor, buildJsonObject { put("type", "move"); put("id", id); put("text", if (up) "up" else "down") }.toString())
+
     fun add(monitor: String, text: String) {
         if (text.isBlank()) return
         client.act(monitor, buildJsonObject { put("type", "add"); put("text", text.trim()) }.toString())

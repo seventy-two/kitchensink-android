@@ -100,7 +100,8 @@
        "id": "c",
        "title": "Return the parcel"
       }
-     ]
+     ],
+     "movable": true
     }
    ],
    "summary": [
@@ -941,6 +942,32 @@
      "label": "Cheapest",
      "value": "£12,750",
      "detail": "2021 GT"
+    }
+   ]
+  },
+  {
+   "monitor": "mail",
+   "kind": "mail",
+   "title": "Mail",
+   "updated": "2026-10-12T14:00:00Z",
+   "background": true,
+   "blocks": [
+    {
+     "type": "list",
+     "title": "Found in email",
+     "items": [
+      {
+       "title": "Vildhjarta tickets",
+       "subtitle": "Calendar: Vildhjarta, Fri 16 Oct 19:00",
+       "detail": "Gmail · Ticketmaster · Sat"
+      }
+     ]
+    }
+   ],
+   "summary": [
+    {
+     "label": "From email",
+     "value": "Vildhjarta tickets"
     }
    ]
   }

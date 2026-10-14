@@ -101,7 +101,9 @@ interface ScreenCallbacks {
 
 /** The panels in the user's order, private figures left out if they're hidden. */
 fun orderedPanels(snapshots: List<Snapshot>, config: Config): List<Snapshot> {
-    val shown = if (config.hidePrivate) snapshots.map { it.withoutPrivate() } else snapshots
+    // Background monitors feed other panels; the settings show them.
+    val panels = snapshots.filter { !it.background }
+    val shown = if (config.hidePrivate) panels.map { it.withoutPrivate() } else panels
     if (config.order.isEmpty()) return shown
     val byId = shown.associateBy { it.monitor }
     return arrange(shown.map { it.monitor }, config.order).mapNotNull { byId[it] }
