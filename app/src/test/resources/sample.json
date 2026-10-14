@@ -112,6 +112,283 @@
    ]
   },
   {
+   "monitor": "dailies",
+   "kind": "dailies",
+   "title": "Dailies",
+   "updated": "2026-10-12T14:50:00Z",
+   "blocks": [
+    {
+     "type": "table",
+     "columns": [
+      {
+       "title": "Game",
+       "fill": true
+      },
+      {
+       "title": "Today"
+      }
+     ],
+     "rows": [
+      [
+       {
+        "text": "Wordle",
+        "url": "https://www.nytimes.com/games/wordle/index.html"
+       },
+       {
+        "text": "Won",
+        "tone": "good"
+       }
+      ],
+      [
+       {
+        "text": "Connections",
+        "url": "https://www.nytimes.com/games/connections"
+       },
+       {
+        "text": "Drew",
+        "tone": "accent"
+       }
+      ],
+      [
+       {
+        "text": "Worldle",
+        "url": "https://worldle.teuteuf.fr/"
+       },
+       {
+        "text": "Drew",
+        "tone": "accent"
+       }
+      ],
+      [
+       {
+        "text": "Flagle",
+        "url": "https://www.flagle.io/"
+       },
+       {
+        "text": "Drew",
+        "tone": "accent"
+       }
+      ],
+      [
+       {
+        "text": "Betweenle",
+        "url": "https://betweenle.com/"
+       },
+       {
+        "text": "Lost",
+        "tone": "bad"
+       }
+      ],
+      [
+       {
+        "text": "Burgle",
+        "url": "https://www.thedailyburgle.app/"
+       },
+       {
+        "text": "Drew",
+        "tone": "accent"
+       }
+      ],
+      [
+       {
+        "text": "MapTap",
+        "url": "https://maptap.gg/"
+       },
+       {
+        "text": "Lost",
+        "tone": "bad"
+       }
+      ],
+      [
+       {
+        "text": "Chronophoto",
+        "url": "https://www.chronophoto.app/daily.html"
+       },
+       {
+        "text": "Lost",
+        "tone": "bad"
+       }
+      ],
+      [
+       {
+        "text": "Poople",
+        "url": "https://poople.io/"
+       },
+       {
+        "text": "Won",
+        "tone": "good"
+       }
+      ],
+      [
+       {
+        "text": "Krillion",
+        "url": "https://krillion.io/"
+       },
+       {
+        "text": "Won",
+        "tone": "good"
+       }
+      ],
+      [
+       {
+        "text": "Semantle",
+        "url": "https://semantle.com/"
+       },
+       {
+        "text": "Lost",
+        "tone": "bad"
+       }
+      ],
+      [
+       {
+        "text": "Semantle Junior",
+        "url": "https://semantle.com/junior"
+       },
+       {
+        "text": ""
+       }
+      ],
+      [
+       {
+        "text": "Redactle",
+        "url": "https://redactle.net/"
+       },
+       {
+        "text": ""
+       }
+      ],
+      [
+       {
+        "text": "Fillle",
+        "url": "https://0x48.io/fillle/"
+       },
+       {
+        "text": "Won",
+        "tone": "good"
+       }
+      ],
+      [
+       {
+        "text": "Wikidle",
+        "url": "https://0x48.io/wikidle/"
+       },
+       {
+        "text": "Won",
+        "tone": "good"
+       }
+      ],
+      [
+       {
+        "text": "RNGdle",
+        "url": "https://rngdle.com/"
+       },
+       {
+        "text": "Won",
+        "tone": "good"
+       }
+      ]
+     ]
+    }
+   ],
+   "summary": [
+    {
+     "label": "",
+     "value": "W",
+     "tone": "good",
+     "url": "https://www.nytimes.com/games/wordle/index.html"
+    },
+    {
+     "label": "",
+     "value": "C",
+     "tone": "accent",
+     "url": "https://www.nytimes.com/games/connections"
+    },
+    {
+     "label": "",
+     "value": "W2",
+     "tone": "accent",
+     "url": "https://worldle.teuteuf.fr/"
+    },
+    {
+     "label": "",
+     "value": "F",
+     "tone": "accent",
+     "url": "https://www.flagle.io/"
+    },
+    {
+     "label": "",
+     "value": "B1",
+     "tone": "bad",
+     "url": "https://betweenle.com/"
+    },
+    {
+     "label": "",
+     "value": "B2",
+     "tone": "accent",
+     "url": "https://www.thedailyburgle.app/"
+    },
+    {
+     "label": "",
+     "value": "Maptap",
+     "tone": "bad",
+     "url": "https://maptap.gg/"
+    },
+    {
+     "label": "",
+     "value": "Chrono",
+     "tone": "bad",
+     "url": "https://www.chronophoto.app/daily.html"
+    },
+    {
+     "label": "",
+     "value": "Poop",
+     "tone": "good",
+     "url": "https://poople.io/"
+    },
+    {
+     "label": "",
+     "value": "K",
+     "tone": "good",
+     "url": "https://krillion.io/"
+    },
+    {
+     "label": "",
+     "value": "S",
+     "tone": "bad",
+     "url": "https://semantle.com/"
+    },
+    {
+     "label": "",
+     "value": "SJr",
+     "url": "https://semantle.com/junior"
+    },
+    {
+     "label": "",
+     "value": "R",
+     "url": "https://redactle.net/"
+    },
+    {
+     "label": "",
+     "value": "Fillle",
+     "tone": "good",
+     "url": "https://0x48.io/fillle/"
+    },
+    {
+     "label": "",
+     "value": "Wikidle",
+     "tone": "good",
+     "url": "https://0x48.io/wikidle/"
+    },
+    {
+     "label": "",
+     "value": "RNGdle",
+     "tone": "good",
+     "url": "https://rngdle.com/"
+    }
+   ],
+   "summaryStyle": "chips"
+  },
+  {
    "monitor": "osrs",
    "kind": "osrs",
    "title": "OSRS today",

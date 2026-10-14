@@ -189,7 +189,10 @@ private fun TableBlock(b: Block) {
     val pad = mt.cellPadH
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val avail = constraints.maxWidth
-        val padPx = with(density) { pad.toPx() }.toInt()
+        // Rounded as layout rounds it: at fractional densities (TV mode's
+        // 1.6) truncating made the row a few pixels too wide, squeezing the
+        // last column until its text wrapped.
+        val padPx = with(density) { pad.roundToPx() }
         val fixed = widths.withIndex().filter { it.index != stretch }.sumOf { it.value } + padPx * 2 * (cols - 1)
         val minStretch = with(density) { 72.dp.toPx() }.toInt()
         val natural = if (stretch >= 0) widths[stretch] else 0

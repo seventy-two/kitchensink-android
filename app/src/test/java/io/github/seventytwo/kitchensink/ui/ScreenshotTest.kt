@@ -105,6 +105,18 @@ class ScreenshotTest {
         compose.onRoot().captureRoboImage("build/screenshots/tv-smaller-retro.png")
     }
 
+    // Tables measure their columns in pixels, which the smaller TV mode makes fractional.
+    @Test @Robo(qualifiers = "w960dp-h540dp-land-television-xhdpi")
+    fun tvSmallerTable() {
+        compose.setContent {
+            val d = androidx.compose.ui.platform.LocalDensity.current
+            CompositionLocalProvider(androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(d.density * 0.8f, d.fontScale)) {
+                Themed { DashboardScreen(state(configured.copy(expanded = setOf("dailies")), tv = true), ScreenCallbacks.None) }
+            }
+        }
+        compose.onRoot().captureRoboImage("build/screenshots/tv-smaller-table.png")
+    }
+
     @Test @Robo(qualifiers = "w411dp-h891dp-port-xxhdpi")
     fun notSetUp() = shot("not-set-up", s = state(Config()).copy(conn = ConnState.NotConfigured, snapshots = emptyList()))
 
