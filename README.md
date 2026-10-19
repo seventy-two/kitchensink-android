@@ -31,6 +31,12 @@ for all three.
   service with a silent, minimised notification); it restarts after the
   phone does. Settings has a button to stop Android putting it to sleep to
   save battery.
+- **Home screen widget**: each monitor's summary in panel order, as chips
+  or tiles like the compact rows, scrolling when there are more than fit,
+  in the app's theme. The app redraws it whenever the dashboard changes, so
+  it's live while the background connection is on; otherwise it shows the
+  last it heard, with how long ago. It leaves out private figures while
+  they're hidden in the app. Tapping it opens the app.
 - Checklists (the `todo` monitor) can be ticked, added to and deleted from;
   a tick shows at once, ahead of the server's update.
 - Keeps the event stream open, reconnects with backoff, and catches up on
@@ -78,9 +84,10 @@ the key named by the `ks.keystore`, `ks.storePassword`, `ks.keyAlias` and
 not here), or the debug key without them. Keep using the same key, or
 Android won't install an update over the last.
 
-The tests cover the model, layout decisions, chips, the SSE parser and the
-stream client (against a mock server). Screenshot tests draw the dashboard
-from a made-up sample with Robolectric at phone, tablet and TV sizes; to
+The tests cover the model, layout decisions, chips, the widget's data, the
+SSE parser and the stream client (against a mock server). Screenshot tests
+draw the dashboard from a made-up sample with Robolectric at phone, tablet
+and TV sizes, and the widget at a few home screen sizes; to
 look at them:
 
 ```sh
@@ -99,6 +106,7 @@ look at them:
 | `Hub.kt` | the app's state: settings, the stream, refreshes, ticks, notifications |
 | `data/Config.kt` | settings and the encrypted token |
 | `notify/Notifier.kt`, `service/LiveService.kt` | notifications, and staying connected in the background |
+| `widget/WidgetData.kt`, `widget/DashboardWidget.kt` | what the home screen widget shows, saved for it, and the widget itself (Glance) |
 | `ui/` | the screens: panels, blocks, summaries, Recent, settings |
 | `draw/` | the weather icons and the cat, drawn from shapes |
 

@@ -15,6 +15,8 @@ import io.github.seventytwo.kitchensink.net.Inbound
 import io.github.seventytwo.kitchensink.net.StreamClient
 import io.github.seventytwo.kitchensink.notify.Notifier
 import io.github.seventytwo.kitchensink.service.LiveService
+import io.github.seventytwo.kitchensink.widget.WidgetStore
+import io.github.seventytwo.kitchensink.widget.widgetData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -65,6 +67,7 @@ class Hub(private val context: Context, private val store: ConfigStore, http: Ok
 
     private var foreground = false
     private var stopLater: Job? = null
+    private var widgetLater: Job? = null
 
     init {
         dashboard.restoreCleared(_config.value.cleared)
@@ -135,6 +138,22 @@ class Hub(private val context: Context, private val store: ConfigStore, http: Ok
     private fun publish() {
         _snapshots.value = dashboard.snapshotList
         _events.value = dashboard.eventList
+        refreshWidget()
+    }
+
+    /**
+     * Saves what the home screen widget shows, a moment after the last
+     * change so a burst redraws it once. Until the stream has sent
+     * something, it keeps showing what it had.
+     */
+    private fun refreshWidget() {
+        widgetLater?.cancel()
+        widgetLater = scope.launch {
+            delay(2_000)
+            val c = _config.value
+            if (c.configured && _snapshots.value.isEmpty()) return@launch
+            WidgetStore.show(context, widgetData(_snapshots.value, c))
+        }
     }
 
     fun update(f: (Config) -> Config) {
@@ -151,6 +170,8 @@ class Hub(private val context: Context, private val store: ConfigStore, http: Ok
             dashboard = Dashboard().apply { restoreCleared(c.cleared) }
             publish()
         }
+        // The theme, order and private figures show in the widget too.
+        refreshWidget()
         ensureRunning()
     }
 

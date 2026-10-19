@@ -13,8 +13,8 @@ android {
         applicationId = "io.github.seventytwo.kitchensink"
         minSdk = 26
         targetSdk = 36
-        versionCode = 5
-        versionName = "0.5"
+        versionCode = 6
+        versionName = "0.6"
     }
 
     // A release key kept outside the repo, so each build installs over the
@@ -65,6 +65,7 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.coil.compose)
     implementation(libs.coil.network)
+    implementation(libs.glance.appwidget)
 
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)
