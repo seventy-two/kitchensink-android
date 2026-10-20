@@ -66,6 +66,7 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.network)
     implementation(libs.glance.appwidget)
+    implementation(libs.work.runtime)
 
     testImplementation(libs.junit)
     testImplementation(libs.coroutines.test)
