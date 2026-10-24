@@ -25,7 +25,8 @@ for all three.
   remote's D-pad moves between rows, buttons and events, outlined in the
   accent colour, and select opens or closes a panel.
 - **Notifications** for new events while the dashboard isn't on screen,
-  filtered by priority, a burst becoming one. High-priority events use
+  filtered by priority, a burst becoming one. Each stays until the
+  dashboard is opened: a later one never replaces it. High-priority events use
   their own channel, which can sound and pop up. To get them as things
   happen, the app can stay connected in the background (a foreground
   service with a silent, minimised notification); it restarts after the

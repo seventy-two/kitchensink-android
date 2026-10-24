@@ -21,7 +21,9 @@ import io.github.seventytwo.kitchensink.model.Priority
 
 /**
  * Raises a notification for each new event. They're held briefly so a
- * burst, e.g. after being offline, becomes one notification.
+ * burst, e.g. after being offline, becomes one notification. Each has its
+ * own tag, so a later one never replaces one the user hasn't seen yet
+ * (a new car at 7am was once wiped out by the 9am chores reminder).
  */
 class Notifier(private val context: Context) {
     private val manager = NotificationManagerCompat.from(context)
@@ -42,7 +44,9 @@ class Notifier(private val context: Context) {
 
     /** Removes the event notifications, once the dashboard's in front of the user. */
     fun clearEvents() {
-        manager.cancel(EVENT_ID)
+        for (n in manager.activeNotifications) {
+            if (n.id == EVENT_ID) manager.cancel(n.tag, n.id)
+        }
     }
 
     private fun flush() {
@@ -72,7 +76,7 @@ class Notifier(private val context: Context) {
             b.setContentIntent(open(""))
         }
         try {
-            manager.notify(EVENT_ID, b.build())
+            manager.notify(tagOf(events), EVENT_ID, b.build())
         } catch (_: SecurityException) {
         }
     }
@@ -88,6 +92,10 @@ class Notifier(private val context: Context) {
     }
 
     companion object {
+        /** tagOf names a notification after its events, one or a burst. */
+        fun tagOf(events: List<Event>): String =
+            if (events.size == 1) "event:${events[0].id}" else "burst:${events[0].id}"
+
         const val CHANNEL_EVENTS = "events"
         const val CHANNEL_HIGH = "high"
         const val CHANNEL_LIVE = "live"
