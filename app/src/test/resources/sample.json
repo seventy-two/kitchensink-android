@@ -112,6 +112,415 @@
    ]
   },
   {
+   "monitor": "lights",
+   "kind": "lights",
+   "title": "Lights",
+   "updated": "2026-10-12T14:52:03Z",
+   "blocks": [
+    {
+     "type": "checklist",
+     "noDelete": true,
+     "movable": true,
+     "upHint": "Brighter",
+     "downHint": "Dimmer",
+     "items": [
+      {
+       "id": "all",
+       "title": "All lights · 2 of 3 on",
+       "slider": {
+        "value": 55,
+        "action": "brightness",
+        "hint": "Brightness"
+       },
+       "colour": {
+        "action": "colour",
+        "wheel": true,
+        "presets": [
+         {
+          "label": "Candle",
+          "value": "2200K",
+          "show": "#ff9227"
+         },
+         {
+          "label": "Warm white",
+          "value": "2700K",
+          "show": "#ffa757"
+         },
+         {
+          "label": "Soft white",
+          "value": "3500K",
+          "show": "#ffc18d"
+         },
+         {
+          "label": "Neutral white",
+          "value": "4500K",
+          "show": "#ffdbba"
+         },
+         {
+          "label": "Daylight",
+          "value": "6500K",
+          "show": "#fffefa"
+         },
+         {
+          "label": "Red",
+          "value": "#ff0000",
+          "show": "#ff0000"
+         },
+         {
+          "label": "Orange",
+          "value": "#ff7300",
+          "show": "#ff7300"
+         },
+         {
+          "label": "Amber",
+          "value": "#ffb000",
+          "show": "#ffb000"
+         },
+         {
+          "label": "Yellow",
+          "value": "#ffe600",
+          "show": "#ffe600"
+         },
+         {
+          "label": "Green",
+          "value": "#00ff2a",
+          "show": "#00ff2a"
+         },
+         {
+          "label": "Teal",
+          "value": "#00ffbf",
+          "show": "#00ffbf"
+         },
+         {
+          "label": "Cyan",
+          "value": "#00d5ff",
+          "show": "#00d5ff"
+         },
+         {
+          "label": "Blue",
+          "value": "#0033ff",
+          "show": "#0033ff"
+         },
+         {
+          "label": "Purple",
+          "value": "#8c00ff",
+          "show": "#8c00ff"
+         },
+         {
+          "label": "Magenta",
+          "value": "#ff00d4",
+          "show": "#ff00d4"
+         },
+         {
+          "label": "Pink",
+          "value": "#ff4d8c",
+          "show": "#ff4d8c"
+         }
+        ]
+       }
+      },
+      {
+       "id": "light.living",
+       "title": "Living room · 80%",
+       "slider": {
+        "value": 80,
+        "action": "brightness",
+        "hint": "Brightness"
+       },
+       "colour": {
+        "value": "#ffa757",
+        "action": "colour",
+        "wheel": true,
+        "presets": [
+         {
+          "label": "Candle",
+          "value": "2200K",
+          "show": "#ff9227"
+         },
+         {
+          "label": "Warm white",
+          "value": "2700K",
+          "show": "#ffa757"
+         },
+         {
+          "label": "Soft white",
+          "value": "3500K",
+          "show": "#ffc18d"
+         },
+         {
+          "label": "Neutral white",
+          "value": "4500K",
+          "show": "#ffdbba"
+         },
+         {
+          "label": "Daylight",
+          "value": "6500K",
+          "show": "#fffefa"
+         },
+         {
+          "label": "Red",
+          "value": "#ff0000",
+          "show": "#ff0000"
+         },
+         {
+          "label": "Orange",
+          "value": "#ff7300",
+          "show": "#ff7300"
+         },
+         {
+          "label": "Amber",
+          "value": "#ffb000",
+          "show": "#ffb000"
+         },
+         {
+          "label": "Yellow",
+          "value": "#ffe600",
+          "show": "#ffe600"
+         },
+         {
+          "label": "Green",
+          "value": "#00ff2a",
+          "show": "#00ff2a"
+         },
+         {
+          "label": "Teal",
+          "value": "#00ffbf",
+          "show": "#00ffbf"
+         },
+         {
+          "label": "Cyan",
+          "value": "#00d5ff",
+          "show": "#00d5ff"
+         },
+         {
+          "label": "Blue",
+          "value": "#0033ff",
+          "show": "#0033ff"
+         },
+         {
+          "label": "Purple",
+          "value": "#8c00ff",
+          "show": "#8c00ff"
+         },
+         {
+          "label": "Magenta",
+          "value": "#ff00d4",
+          "show": "#ff00d4"
+         },
+         {
+          "label": "Pink",
+          "value": "#ff4d8c",
+          "show": "#ff4d8c"
+         }
+        ]
+       }
+      },
+      {
+       "id": "light.study",
+       "title": "Study · 30%",
+       "slider": {
+        "value": 30,
+        "action": "brightness",
+        "hint": "Brightness"
+       },
+       "colour": {
+        "value": "#0033ff",
+        "action": "colour",
+        "wheel": true,
+        "presets": [
+         {
+          "label": "Candle",
+          "value": "2200K",
+          "show": "#ff9227"
+         },
+         {
+          "label": "Warm white",
+          "value": "2700K",
+          "show": "#ffa757"
+         },
+         {
+          "label": "Soft white",
+          "value": "3500K",
+          "show": "#ffc18d"
+         },
+         {
+          "label": "Neutral white",
+          "value": "4500K",
+          "show": "#ffdbba"
+         },
+         {
+          "label": "Daylight",
+          "value": "6500K",
+          "show": "#fffefa"
+         },
+         {
+          "label": "Red",
+          "value": "#ff0000",
+          "show": "#ff0000"
+         },
+         {
+          "label": "Orange",
+          "value": "#ff7300",
+          "show": "#ff7300"
+         },
+         {
+          "label": "Amber",
+          "value": "#ffb000",
+          "show": "#ffb000"
+         },
+         {
+          "label": "Yellow",
+          "value": "#ffe600",
+          "show": "#ffe600"
+         },
+         {
+          "label": "Green",
+          "value": "#00ff2a",
+          "show": "#00ff2a"
+         },
+         {
+          "label": "Teal",
+          "value": "#00ffbf",
+          "show": "#00ffbf"
+         },
+         {
+          "label": "Cyan",
+          "value": "#00d5ff",
+          "show": "#00d5ff"
+         },
+         {
+          "label": "Blue",
+          "value": "#0033ff",
+          "show": "#0033ff"
+         },
+         {
+          "label": "Purple",
+          "value": "#8c00ff",
+          "show": "#8c00ff"
+         },
+         {
+          "label": "Magenta",
+          "value": "#ff00d4",
+          "show": "#ff00d4"
+         },
+         {
+          "label": "Pink",
+          "value": "#ff4d8c",
+          "show": "#ff4d8c"
+         }
+        ]
+       }
+      },
+      {
+       "id": "light.hall",
+       "title": "Hallway",
+       "slider": {
+        "value": 0,
+        "action": "brightness",
+        "hint": "Brightness"
+       },
+       "colour": {
+        "action": "colour",
+        "wheel": true,
+        "presets": [
+         {
+          "label": "Candle",
+          "value": "2200K",
+          "show": "#ff9227"
+         },
+         {
+          "label": "Warm white",
+          "value": "2700K",
+          "show": "#ffa757"
+         },
+         {
+          "label": "Soft white",
+          "value": "3500K",
+          "show": "#ffc18d"
+         },
+         {
+          "label": "Neutral white",
+          "value": "4500K",
+          "show": "#ffdbba"
+         },
+         {
+          "label": "Daylight",
+          "value": "6500K",
+          "show": "#fffefa"
+         },
+         {
+          "label": "Red",
+          "value": "#ff0000",
+          "show": "#ff0000"
+         },
+         {
+          "label": "Orange",
+          "value": "#ff7300",
+          "show": "#ff7300"
+         },
+         {
+          "label": "Amber",
+          "value": "#ffb000",
+          "show": "#ffb000"
+         },
+         {
+          "label": "Yellow",
+          "value": "#ffe600",
+          "show": "#ffe600"
+         },
+         {
+          "label": "Green",
+          "value": "#00ff2a",
+          "show": "#00ff2a"
+         },
+         {
+          "label": "Teal",
+          "value": "#00ffbf",
+          "show": "#00ffbf"
+         },
+         {
+          "label": "Cyan",
+          "value": "#00d5ff",
+          "show": "#00d5ff"
+         },
+         {
+          "label": "Blue",
+          "value": "#0033ff",
+          "show": "#0033ff"
+         },
+         {
+          "label": "Purple",
+          "value": "#8c00ff",
+          "show": "#8c00ff"
+         },
+         {
+          "label": "Magenta",
+          "value": "#ff00d4",
+          "show": "#ff00d4"
+         },
+         {
+          "label": "Pink",
+          "value": "#ff4d8c",
+          "show": "#ff4d8c"
+         }
+        ]
+       },
+       "done": true
+      }
+     ]
+    }
+   ],
+   "summary": [
+    {
+     "label": "Lights",
+     "value": "2 of 3 on",
+     "tone": "accent",
+     "lead": true
+    }
+   ],
+   "summaryStyle": "chips"
+  },
+  {
    "monitor": "dailies",
    "kind": "dailies",
    "title": "Dailies",

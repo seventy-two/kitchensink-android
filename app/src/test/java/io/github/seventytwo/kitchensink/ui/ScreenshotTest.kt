@@ -9,6 +9,15 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import com.github.takahirom.roborazzi.captureRoboImage
+import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.background
+import com.github.takahirom.roborazzi.captureScreenRoboImage
 import io.github.seventytwo.kitchensink.data.Config
 import io.github.seventytwo.kitchensink.data.OledCare
 import io.github.seventytwo.kitchensink.model.json
@@ -115,6 +124,26 @@ class ScreenshotTest {
             }
         }
         compose.onRoot().captureRoboImage("build/screenshots/tv-smaller-table.png")
+    }
+
+    // The lights' sliders and colour swatches, then a colour picker open.
+    @Test @Robo(qualifiers = "w411dp-h891dp-port-xxhdpi")
+    fun lights() {
+        val lights = snapshots.first { it.monitor == "lights" }
+        compose.setContent {
+            Themed {
+                Box(Modifier.fillMaxSize().background(LocalPalette.current.bg).padding(16.dp)) {
+                    Box(Modifier.fillMaxWidth().background(LocalPalette.current.card).padding(12.dp)) {
+                        BlockView("lights", lights.blocks[0])
+                    }
+                }
+            }
+        }
+        compose.waitForIdle()
+        compose.onRoot().captureRoboImage("build/screenshots/lights.png")
+        compose.onAllNodesWithContentDescription("Colour")[2].performClick()
+        compose.waitForIdle()
+        captureScreenRoboImage("build/screenshots/lights-colour.png")
     }
 
     @Test @Robo(qualifiers = "w411dp-h891dp-port-xxhdpi")

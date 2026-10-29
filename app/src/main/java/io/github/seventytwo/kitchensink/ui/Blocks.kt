@@ -56,6 +56,7 @@ import io.github.seventytwo.kitchensink.model.Align
 import io.github.seventytwo.kitchensink.model.Block
 import io.github.seventytwo.kitchensink.model.Stat
 import io.github.seventytwo.kitchensink.model.Tone
+import io.github.seventytwo.kitchensink.model.parseHexColour
 import kotlin.math.ceil
 
 /** One block of a monitor's panel; [monitor] is where a checklist sends its actions. */
@@ -281,6 +282,8 @@ private fun ChecklistBlock(monitor: String, b: Block) {
     Column(Modifier.fillMaxWidth()) {
         for (it in b.items) {
             val done = state.ticked["$monitor/${it.id}"] ?: it.done
+            // Items with controls (lights) have no up and down buttons.
+            val controls = it.slider != null || it.colour != null
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Row(Modifier.weight(1f).tappable { actions.toggle(monitor, it.id, !done) }, verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(
@@ -292,11 +295,16 @@ private fun ChecklistBlock(monitor: String, b: Block) {
                         color = if (done) p.muted else p.text, modifier = Modifier.padding(start = 6.dp, end = 4.dp),
                     )
                 }
-                if (b.movable && !done) {
+                it.colour?.let { c -> ItemColourView(monitor, it.id, it.title, c, done) }
+                if (b.movable && !done && !controls) {
                     IconButtonSmall(Icons.Filled.KeyboardArrowUp, b.upHint.ifEmpty { "Move up" }, size = 32.dp, iconSize = 18.dp) { actions.move(monitor, it.id, true) }
                     IconButtonSmall(Icons.Filled.KeyboardArrowDown, b.downHint.ifEmpty { "Move down" }, size = 32.dp, iconSize = 18.dp) { actions.move(monitor, it.id, false) }
                 }
                 if (!b.noDelete) IconButtonSmall(Icons.Filled.Close, b.deleteHint.ifEmpty { "Delete" }, size = 32.dp, iconSize = 16.dp) { actions.delete(monitor, it.id) }
+            }
+            it.slider?.let { sl ->
+                val fill = it.colour?.value?.let(::parseHexColour)?.let(::rgbColour)
+                ItemSliderView(monitor, it.id, sl, done, fill, Modifier.fillMaxWidth().padding(start = 40.dp, end = 8.dp))
             }
         }
         if (b.items.isEmpty()) Text("Nothing to do.", style = mt.body, color = p.muted)

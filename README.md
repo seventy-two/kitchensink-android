@@ -40,6 +40,9 @@ for all three.
   they're hidden in the app. Tapping it opens the app.
 - Checklists (the `todo` monitor) can be ticked, added to and deleted from;
   a tick shows at once, ahead of the server's update.
+- Checklist items with a `slider` or `colour` (the `lights` monitor) get a
+  slider on a line of their own, sent when let go, and a round swatch that
+  opens the presets and a colour wheel.
 - Keeps the event stream open, reconnects with backoff, and catches up on
   events missed while offline.
 - The eye in the header, there when a monitor sends private figures, hides

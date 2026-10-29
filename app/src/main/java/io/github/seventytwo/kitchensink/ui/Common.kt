@@ -41,6 +41,8 @@ interface Actions {
     fun delete(monitor: String, id: String)
     fun move(monitor: String, id: String, up: Boolean)
     fun add(monitor: String, text: String)
+    /** Sends an action of [type] with [text] (a slider's value, a colour); [done], if set, is the tick it leads to. */
+    fun send(monitor: String, type: String, id: String, text: String, done: Boolean? = null)
 
     object None : Actions {
         override fun open(url: String) {}
@@ -49,6 +51,7 @@ interface Actions {
         override fun delete(monitor: String, id: String) {}
         override fun move(monitor: String, id: String, up: Boolean) {}
         override fun add(monitor: String, text: String) {}
+        override fun send(monitor: String, type: String, id: String, text: String, done: Boolean?) {}
     }
 }
 

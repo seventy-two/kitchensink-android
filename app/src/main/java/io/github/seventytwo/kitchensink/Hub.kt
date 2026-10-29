@@ -200,6 +200,16 @@ class Hub(private val context: Context, private val store: ConfigStore, http: Ok
     fun move(monitor: String, id: String, up: Boolean) =
         client.act(monitor, buildJsonObject { put("type", "move"); put("id", id); put("text", if (up) "up" else "down") }.toString())
 
+    fun send(monitor: String, type: String, id: String, text: String, done: Boolean?) {
+        client.act(monitor, buildJsonObject { put("type", type); put("id", id); put("text", text) }.toString())
+        if (done == null) return
+        _ticked.value += "$monitor/$id" to done
+        scope.launch {
+            delay(10_000)
+            _ticked.value -= "$monitor/$id"
+        }
+    }
+
     fun add(monitor: String, text: String) {
         if (text.isBlank()) return
         client.act(monitor, buildJsonObject { put("type", "add"); put("text", text.trim()) }.toString())

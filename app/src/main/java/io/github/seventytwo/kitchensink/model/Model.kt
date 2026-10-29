@@ -38,6 +38,22 @@ data class Column(val title: String = "", val align: Align = Align.Left, val fil
 
 data class Cell(val text: String = "", val url: String = "", val tone: Tone = Tone.None, val detail: String = "")
 
+/** A checklist item's 0-100 control (a light's brightness): let go at a new value, it sends [action] with the value. */
+data class Slider(val value: Int = 0, val action: String = "", val hint: String = "")
+
+/** A preset colour: [value] is sent when it's picked (e.g. "2700K"), [show] ("#rrggbb") is what it looks like. */
+data class Swatch(val label: String = "", val value: String = "", val show: String = "")
+
+/** A checklist item's colour swatch (a light's colour), opening a picker that sends [action] with "#rrggbb" or a preset's value. */
+data class Colour(
+    /** "#rrggbb" now, or empty (e.g. off). */
+    val value: String = "",
+    val action: String = "",
+    /** Any colour, not only [presets]. */
+    val wheel: Boolean = false,
+    val presets: List<Swatch> = emptyList(),
+)
+
 data class Item(
     val title: String = "",
     val subtitle: String = "",
@@ -48,6 +64,8 @@ data class Item(
     // For checklists.
     val id: String = "",
     val done: Boolean = false,
+    val slider: Slider? = null,
+    val colour: Colour? = null,
 )
 
 /** One part of a monitor's panel. Only the fields for its type are set. */
@@ -171,7 +189,19 @@ private fun parseBlock(e: JsonElement): Block {
         },
         items = j.array("items").map {
             val i = it.obj()
-            Item(i.str("title"), i.str("subtitle"), i.str("detail"), i.str("url"), i.str("image"), i.tone(), i.str("id"), i.flag("done"))
+            Item(
+                i.str("title"), i.str("subtitle"), i.str("detail"), i.str("url"), i.str("image"), i.tone(), i.str("id"), i.flag("done"),
+                slider = (i["slider"] as? JsonObject)?.let { s ->
+                    val v = (s["value"] as? JsonPrimitive)?.takeIf { p -> !p.isString }?.floatOrNull ?: 0f
+                    Slider(v.toInt().coerceIn(0, 100), s.str("action"), s.str("hint"))
+                },
+                colour = (i["colour"] as? JsonObject)?.let { c ->
+                    Colour(
+                        c.str("value"), c.str("action"), c.flag("wheel"),
+                        c.array("presets").map { p -> p.obj().let { Swatch(it.str("label"), it.str("value"), it.str("show")) } },
+                    )
+                },
+            )
         },
     )
 }
@@ -253,3 +283,10 @@ fun Snapshot.withoutPrivate(): Snapshot = copy(
         // A stats block left with nothing goes too.
         .filterNot { it.isPrivate || (it.type == "stats" && it.stats.isEmpty()) },
 )
+
+/** Reads "#rrggbb" as 0xrrggbb, or null if it isn't one. */
+fun parseHexColour(s: String): Int? =
+    if (s.length == 7 && s[0] == '#') s.substring(1).toIntOrNull(16) else null
+
+/** Writes 0xrrggbb as "#rrggbb". */
+fun hexColour(rgb: Int): String = "#%06x".format(rgb and 0xffffff)

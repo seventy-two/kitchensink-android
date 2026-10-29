@@ -196,6 +196,8 @@ class MainActivity : ComponentActivity() {
                 override fun delete(monitor: String, id: String) = hub.delete(monitor, id)
                 override fun move(monitor: String, id: String, up: Boolean) = hub.move(monitor, id, up)
                 override fun add(monitor: String, text: String) = hub.add(monitor, text)
+                override fun send(monitor: String, type: String, id: String, text: String, done: Boolean?) =
+                    hub.send(monitor, type, id, text, done)
             }
         }
         val callbacks = remember {

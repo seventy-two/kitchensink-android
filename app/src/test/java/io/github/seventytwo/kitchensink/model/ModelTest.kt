@@ -2,6 +2,7 @@ package io.github.seventytwo.kitchensink.model
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -42,7 +43,7 @@ class ModelTest {
                  "rows": [[{"text": "Today", "url": "https://example.com", "detail": "dry"}, {"text": "15°", "tone": "bad"}]]},
                 {"type": "list", "items": [{"title": "Car", "image": "https://example.com/a.jpg", "tone": "warn"}]},
                 {"type": "text", "text": "hello", "unknown": {"nested": true}},
-                {"type": "checklist", "addHint": "Add a task…", "items": [{"id": "a1", "title": "Bins", "done": true}, {"id": "b2", "title": "Post"}]}
+                {"type": "checklist", "addHint": "Add a task…", "items": [{"id": "a1", "title": "Bins", "done": true}, {"id": "b2", "title": "Post", "slider": {"value": 140, "action": "brightness", "hint": "Brightness"}, "colour": {"value": "#ff8000", "action": "colour", "wheel": true, "presets": [{"label": "Warm white", "value": "2700K", "show": "#ffa757"}]}}]}
             ],
             "summary": [{"label": "Now", "value": "13°C", "tone": "good", "series": [1, 2]}, {"label": "Rain"}],
             "summaryStyle": "chips"
@@ -58,6 +59,17 @@ class ModelTest {
         assertEquals("a1", s.blocks[4].items[0].id)
         assertTrue(s.blocks[4].items[0].done)
         assertFalse(s.blocks[4].items[1].done)
+        assertNull(s.blocks[4].items[0].slider)
+        assertNull(s.blocks[4].items[0].colour)
+        assertEquals(Slider(100, "brightness", "Brightness"), s.blocks[4].items[1].slider)
+        assertEquals(
+            Colour("#ff8000", "colour", true, listOf(Swatch("Warm white", "2700K", "#ffa757"))),
+            s.blocks[4].items[1].colour,
+        )
+        assertEquals(0xff8000, parseHexColour("#ff8000"))
+        assertEquals("#ff8000", hexColour(0xff8000))
+        assertNull(parseHexColour("ff8000"))
+        assertNull(parseHexColour("#ff80zz"))
         val now = s.blocks[0].stats[0]
         assertEquals("13°C", now.value)
         assertEquals(Tone.Accent, now.tone)
