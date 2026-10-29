@@ -43,9 +43,9 @@ for all three.
 - Checklist items with a `slider` or `colour` get a slider on a line of
   their own, sent when let go, and a round swatch that opens the presets
   and a colour wheel. A `switch` block (the `lights` monitor) draws each item as a
-  slim tile: its title, its slider as a thin line (click or drag along it,
+  slim row, flat on the panel: its title, its slider as a thin line (click or drag along it,
   sent when let go), a round colour swatch opening presets and a colour
-  wheel, and an on/off switch. Tapping elsewhere on the tile toggles it;
+  wheel, and an on/off switch. Tapping elsewhere on the row toggles it;
   a warning subtitle (e.g. unavailable) shows before the swatch.
 - Keeps the event stream open, reconnects with backoff, and catches up on
   events missed while offline.

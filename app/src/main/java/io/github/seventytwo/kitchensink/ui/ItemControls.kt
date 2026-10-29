@@ -70,7 +70,7 @@ import kotlin.math.sin
 fun rgbColour(rgb: Int) = Color(0xff000000.toInt() or rgb)
 
 /**
- * An item of a switches block (a light) as a tile: its title, a thin level line if it has a slider (tap or drag
+ * An item of a switches block (a light) as a slim row, flat on the panel: its title, a thin level line if it has a slider (tap or drag
  * along it, or left and right on a remote, sent when let go), its colour swatch and a switch. Tapped elsewhere,
  * it toggles.
  */
@@ -92,7 +92,7 @@ fun SwitchTile(monitor: String, it: Item, done: Boolean) {
     }
     val shape = RoundedCornerShape(6.dp)
     Box(
-        Modifier.fillMaxWidth().padding(vertical = 3.dp).clip(shape).background(p.frame)
+        Modifier.fillMaxWidth().clip(shape)
             .onPreviewKeyEvent { e ->
                 val step = when (e.key) { Key.DirectionLeft -> -10; Key.DirectionRight -> 10; else -> 0 }
                 if (s == null || step == 0) return@onPreviewKeyEvent false
@@ -102,7 +102,7 @@ fun SwitchTile(monitor: String, it: Item, done: Boolean) {
             .tappable(shape = shape) { actions.toggle(monitor, it.id, !done) }
             .semantics { contentDescription = it.title },
     ) {
-        Row(Modifier.fillMaxWidth().height(44.dp).padding(start = 14.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().height(44.dp).padding(start = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 it.title, style = mt.body, color = if (on) p.text else p.muted, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 modifier = if (s != null) Modifier.width(112.dp) else Modifier.weight(1f),
@@ -128,7 +128,7 @@ fun SwitchTile(monitor: String, it: Item, done: Boolean) {
                     val t = 3.dp.toPx()
                     val x = size.width * (if (on) level else 0f) / 100f
                     val c = if (on && level > 0f) fill else p.muted
-                    drawLine(p.card, Offset(0f, y), Offset(size.width, y), t, StrokeCap.Round)
+                    drawLine(p.frame, Offset(0f, y), Offset(size.width, y), t, StrokeCap.Round)
                     if (x > 0f) drawLine(c, Offset(0f, y), Offset(x, y), t, StrokeCap.Round)
                     drawCircle(c, 6.dp.toPx(), Offset(x, y))
                 }
@@ -139,7 +139,7 @@ fun SwitchTile(monitor: String, it: Item, done: Boolean) {
                 !done, { _ -> actions.toggle(monitor, it.id, !done) }, Modifier.scale(0.7f),
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = Color.White, checkedTrackColor = p.accent, checkedBorderColor = Color.Transparent,
-                    uncheckedThumbColor = p.muted, uncheckedTrackColor = p.card, uncheckedBorderColor = Color.Transparent,
+                    uncheckedThumbColor = p.muted, uncheckedTrackColor = p.frame, uncheckedBorderColor = Color.Transparent,
                 ),
             )
         }
