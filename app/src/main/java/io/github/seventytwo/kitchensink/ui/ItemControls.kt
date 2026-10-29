@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -47,6 +48,7 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -108,9 +110,11 @@ fun SwitchTile(monitor: String, it: Item, done: Boolean) {
                 modifier = if (s != null) Modifier.width(112.dp) else Modifier.weight(1f),
             )
             if (s != null) {
-                fun at(x: Float, w: Int) = (x / w * 100f).coerceIn(0f, 100f)
+                // The row's whole height, and a little past each end, takes touches.
+                val slack = with(LocalDensity.current) { 8.dp.toPx() }
+                fun at(x: Float, w: Int) = ((x - slack) / (w - 2 * slack) * 100f).coerceIn(0f, 100f)
                 Canvas(
-                    Modifier.weight(1f).height(36.dp).padding(horizontal = 8.dp)
+                    Modifier.weight(1f).fillMaxHeight()
                         .pointerInput(monitor, it.id) { detectTapGestures { o -> send(at(o.x, size.width).roundToInt()) } }
                         .pointerInput(monitor, it.id) {
                             detectHorizontalDragGestures(
@@ -126,11 +130,11 @@ fun SwitchTile(monitor: String, it: Item, done: Boolean) {
                 ) {
                     val y = size.height / 2
                     val t = 3.dp.toPx()
-                    val x = size.width * (if (on) level else 0f) / 100f
-                    val c = if (on && level > 0f) fill else p.muted
-                    drawLine(p.frame, Offset(0f, y), Offset(size.width, y), t, StrokeCap.Round)
-                    if (x > 0f) drawLine(c, Offset(0f, y), Offset(x, y), t, StrokeCap.Round)
-                    drawCircle(c, 6.dp.toPx(), Offset(x, y))
+                    val x0 = slack
+                    val x1 = size.width - slack
+                    val x = x0 + (x1 - x0) * (if (on) level else 0f) / 100f
+                    drawLine(p.frame, Offset(x0, y), Offset(x1, y), t, StrokeCap.Round)
+                    if (x > x0) drawLine(fill, Offset(x0, y), Offset(x, y), t, StrokeCap.Round)
                 }
             }
             if (it.tone == Tone.Warn) Text(it.subtitle, style = mt.caption, color = p.warn, maxLines = 1)
