@@ -126,7 +126,7 @@
      "items": [
       {
        "id": "light.living",
-       "title": "Living room · 80%",
+       "title": "Living room", "subtitle": "80%",
        "slider": {
         "value": 80,
         "action": "brightness",
@@ -222,7 +222,7 @@
       },
       {
        "id": "light.study",
-       "title": "Study · 30%",
+       "title": "Study", "subtitle": "30%",
        "slider": {
         "value": 30,
         "action": "brightness",

@@ -1,13 +1,15 @@
 // A checklist item's slider and colour swatch (the lights' brightness and
-// colour), as the Windows client draws them, laid out for a phone: the
-// slider on a line of its own, the swatch at the end of the item's row
-// opening a dialog of presets and a colour wheel.
+// colour). In a switches block (the lights) each item is a tile: its
+// brightness fills it from the left and a drag across it sets it, the
+// swatch opens a dialog of presets and a colour wheel, and a switch at the
+// end turns it on and off.
 package io.github.seventytwo.kitchensink.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,10 +20,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -30,10 +35,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -41,6 +54,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import io.github.seventytwo.kitchensink.model.Colour
+import io.github.seventytwo.kitchensink.model.Item
+import io.github.seventytwo.kitchensink.model.Tone
 import io.github.seventytwo.kitchensink.model.Slider as ItemSlider
 import io.github.seventytwo.kitchensink.model.hexColour
 import io.github.seventytwo.kitchensink.model.parseHexColour
@@ -53,6 +68,71 @@ import kotlin.math.sin
 
 /** 0xrrggbb as an opaque colour. */
 fun rgbColour(rgb: Int) = Color(0xff000000.toInt() or rgb)
+
+/**
+ * An item of a switches block (a light) as a tile: tapped, or its switch, it toggles; with a slider, its level
+ * fills the tile in its colour and a drag across it (or left and right on a remote) sets it, sent when let go.
+ */
+@Composable
+fun SwitchTile(monitor: String, it: Item, done: Boolean) {
+    val p = LocalPalette.current
+    val mt = LocalMetrics.current
+    val actions = LocalActions.current
+    val s = it.slider
+    var dragging by remember(monitor, it.id) { mutableStateOf<Float?>(null) }
+    var sent by remember(monitor, it.id, s?.value) { mutableStateOf<Int?>(null) }
+    var width by remember { mutableStateOf(1f) }
+    val level = dragging ?: sent?.toFloat() ?: s?.value?.toFloat() ?: 0f
+    val on = !done || dragging != null || (sent ?: 0) > 0
+    val fill = it.colour?.value?.let(::parseHexColour)?.let(::rgbColour) ?: p.accent
+    fun send(v: Int) {
+        if (s == null || v == s.value) return
+        sent = v
+        actions.send(monitor, s.action, it.id, v.toString(), done = v == 0)
+    }
+    val shape = RoundedCornerShape(6.dp)
+    Box(
+        Modifier.fillMaxWidth().padding(vertical = 3.dp).clip(shape).background(p.frame)
+            .drawBehind {
+                if (on && s != null && level > 0f) drawRect(fill.copy(alpha = 0.3f), size = size.copy(width = size.width * level / 100f))
+            }
+            .then(
+                if (s == null) Modifier else Modifier.pointerInput(monitor, it.id) {
+                    width = size.width.toFloat()
+                    detectHorizontalDragGestures(
+                        onDragStart = { dragging = if (on) level else 0f },
+                        onDragEnd = { dragging?.let { v -> send(v.roundToInt()) }; dragging = null },
+                        onDragCancel = { dragging = null },
+                    ) { change, dx ->
+                        change.consume()
+                        dragging = ((dragging ?: level) + dx / width * 100f).coerceIn(0f, 100f)
+                    }
+                },
+            )
+            .onPreviewKeyEvent { e ->
+                val step = when (e.key) { Key.DirectionLeft -> -10; Key.DirectionRight -> 10; else -> 0 }
+                if (s == null || step == 0) return@onPreviewKeyEvent false
+                if (e.type == KeyEventType.KeyUp) send(((if (on) level.roundToInt() else 0) + step).coerceIn(0, 100))
+                true
+            }
+            .tappable(shape = shape) { actions.toggle(monitor, it.id, !done) }
+            .semantics { contentDescription = it.title },
+    ) {
+        Row(Modifier.fillMaxWidth().height(44.dp).padding(start = 2.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            it.colour?.let { c -> ItemColourView(monitor, it.id, it.title, c, done, size = 18.dp) } ?: Spacer(Modifier.width(12.dp))
+            Text(it.title, style = mt.body, color = if (on) p.text else p.muted, maxLines = 1, modifier = Modifier.weight(1f).padding(start = 2.dp))
+            val sub = dragging?.let { v -> "${v.roundToInt()}%" } ?: it.subtitle.ifEmpty { if (on) "" else "Off" }
+            Text(sub, style = mt.caption, color = if (it.tone == Tone.Warn) p.warn else p.muted, maxLines = 1)
+            Switch(
+                !done, { _ -> actions.toggle(monitor, it.id, !done) }, Modifier.scale(0.7f),
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color.White, checkedTrackColor = p.accent, checkedBorderColor = Color.Transparent,
+                    uncheckedThumbColor = p.muted, uncheckedTrackColor = p.card, uncheckedBorderColor = Color.Transparent,
+                ),
+            )
+        }
+    }
+}
 
 /**
  * The item's slider, sent when let go. What was sent shows until the server's value changes, as lights report
@@ -103,9 +183,11 @@ fun ItemColourView(monitor: String, id: String, title: String, c: Colour, done: 
             .semantics { contentDescription = "Colour" },
         contentAlignment = Alignment.Center,
     ) {
+        // Filled when the light is on, a ring when it's off.
+        val lit = rgb != null && !off
         Box(
-            Modifier.size(size).background(if (rgb != null && !off) rgbColour(rgb) else Color.Transparent, CircleShape)
-                .border(1.5.dp, p.muted, CircleShape),
+            Modifier.size(size).background(if (lit) rgbColour(rgb!!) else Color.Transparent, CircleShape)
+                .border(1.5.dp, if (lit) Color.White.copy(alpha = 0.25f) else p.muted, CircleShape),
         )
     }
     if (open) {

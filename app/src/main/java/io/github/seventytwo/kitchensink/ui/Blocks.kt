@@ -24,8 +24,6 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -35,7 +33,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -285,27 +282,20 @@ private fun ChecklistBlock(monitor: String, b: Block) {
     Column(Modifier.fillMaxWidth()) {
         for (it in b.items) {
             val done = state.ticked["$monitor/${it.id}"] ?: it.done
+            if (b.switches) {
+                SwitchTile(monitor, it, done)
+                continue
+            }
             // Items with controls (lights) have no up and down buttons.
             val controls = it.slider != null || it.colour != null
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Row(Modifier.weight(1f).tappable { actions.toggle(monitor, it.id, !done) }, verticalAlignment = Alignment.CenterVertically) {
-                    if (b.switches) {
-                        // Tapping the row toggles it, so the switch only shows.
-                        Switch(
-                            !done, null, Modifier.padding(horizontal = 4.dp).scale(0.8f),
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = p.card, checkedTrackColor = p.accent, checkedBorderColor = p.accent,
-                                uncheckedThumbColor = p.muted, uncheckedTrackColor = p.frame, uncheckedBorderColor = p.muted,
-                            ),
-                        )
-                    } else {
-                        Checkbox(
-                            done, null, Modifier.padding(4.dp).size(28.dp),
-                            colors = CheckboxDefaults.colors(checkedColor = p.accent, uncheckedColor = p.muted, checkmarkColor = p.card),
-                        )
-                    }
+                    Checkbox(
+                        done, null, Modifier.padding(4.dp).size(28.dp),
+                        colors = CheckboxDefaults.colors(checkedColor = p.accent, uncheckedColor = p.muted, checkmarkColor = p.card),
+                    )
                     Text(
-                        it.title, style = mt.body.copy(textDecoration = if (done && !b.switches) TextDecoration.LineThrough else null),
+                        it.title, style = mt.body.copy(textDecoration = if (done) TextDecoration.LineThrough else null),
                         color = if (done) p.muted else p.text, modifier = Modifier.padding(start = 6.dp, end = 4.dp),
                     )
                 }
