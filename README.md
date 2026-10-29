@@ -43,10 +43,10 @@ for all three.
 - Checklist items with a `slider` or `colour` get a slider on a line of
   their own, sent when let go, and a round swatch that opens the presets
   and a colour wheel. A `switch` block (the `lights` monitor) draws each item as a
-  tile: its title, its subtitle, a round colour swatch opening presets and
-  a colour wheel, and an on/off switch. Tapping the tile toggles
-  it; its slider's level fills the tile in the item's colour, and dragging (or left and right on a remote)
-  across the tile sets it, sent when let go.
+  slim tile: its title, its slider as a thin line (click or drag along it,
+  sent when let go), a round colour swatch opening presets and a colour
+  wheel, and an on/off switch. Tapping elsewhere on the tile toggles it;
+  a warning subtitle (e.g. unavailable) shows before the swatch.
 - Keeps the event stream open, reconnects with backoff, and catches up on
   events missed while offline.
 - The eye in the header, there when a monitor sends private figures, hides

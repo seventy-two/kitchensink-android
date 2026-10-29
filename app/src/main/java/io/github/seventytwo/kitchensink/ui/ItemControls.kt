@@ -1,8 +1,7 @@
 // A checklist item's slider and colour swatch (the lights' brightness and
-// colour). In a switches block (the lights) each item is a tile: its
-// brightness fills it from the left and a drag across it sets it, the
-// swatch opens a dialog of presets and a colour wheel, and a switch at the
-// end turns it on and off.
+// colour). In a switches block (the lights) each item is a slim tile: its
+// name, its brightness as a thin line, a swatch opening a dialog of
+// presets and a colour wheel, and a switch turning it on and off.
 package io.github.seventytwo.kitchensink.ui
 
 import androidx.compose.foundation.Canvas
@@ -20,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Slider
@@ -35,11 +35,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -49,6 +49,7 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -69,8 +70,9 @@ import kotlin.math.sin
 fun rgbColour(rgb: Int) = Color(0xff000000.toInt() or rgb)
 
 /**
- * An item of a switches block (a light) as a tile: tapped, or its switch, it toggles; with a slider, its level
- * fills the tile in its colour and a drag across it (or left and right on a remote) sets it, sent when let go.
+ * An item of a switches block (a light) as a tile: its title, a thin level line if it has a slider (tap or drag
+ * along it, or left and right on a remote, sent when let go), its colour swatch and a switch. Tapped elsewhere,
+ * it toggles.
  */
 @Composable
 fun SwitchTile(monitor: String, it: Item, done: Boolean) {
@@ -80,7 +82,6 @@ fun SwitchTile(monitor: String, it: Item, done: Boolean) {
     val s = it.slider
     var dragging by remember(monitor, it.id) { mutableStateOf<Float?>(null) }
     var sent by remember(monitor, it.id, s?.value) { mutableStateOf<Int?>(null) }
-    var width by remember { mutableStateOf(1f) }
     val level = dragging ?: sent?.toFloat() ?: s?.value?.toFloat() ?: 0f
     val on = !done || dragging != null || (sent ?: 0) > 0
     val fill = it.colour?.value?.let(::parseHexColour)?.let(::rgbColour) ?: p.accent
@@ -92,22 +93,6 @@ fun SwitchTile(monitor: String, it: Item, done: Boolean) {
     val shape = RoundedCornerShape(6.dp)
     Box(
         Modifier.fillMaxWidth().padding(vertical = 3.dp).clip(shape).background(p.frame)
-            .drawBehind {
-                if (on && s != null && level > 0f) drawRect(fill.copy(alpha = 0.3f), size = size.copy(width = size.width * level / 100f))
-            }
-            .then(
-                if (s == null) Modifier else Modifier.pointerInput(monitor, it.id) {
-                    width = size.width.toFloat()
-                    detectHorizontalDragGestures(
-                        onDragStart = { dragging = if (on) level else 0f },
-                        onDragEnd = { dragging?.let { v -> send(v.roundToInt()) }; dragging = null },
-                        onDragCancel = { dragging = null },
-                    ) { change, dx ->
-                        change.consume()
-                        dragging = ((dragging ?: level) + dx / width * 100f).coerceIn(0f, 100f)
-                    }
-                },
-            )
             .onPreviewKeyEvent { e ->
                 val step = when (e.key) { Key.DirectionLeft -> -10; Key.DirectionRight -> 10; else -> 0 }
                 if (s == null || step == 0) return@onPreviewKeyEvent false
@@ -118,9 +103,37 @@ fun SwitchTile(monitor: String, it: Item, done: Boolean) {
             .semantics { contentDescription = it.title },
     ) {
         Row(Modifier.fillMaxWidth().height(44.dp).padding(start = 14.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(it.title, style = mt.body, color = if (on) p.text else p.muted, maxLines = 1, modifier = Modifier.weight(1f))
-            val sub = dragging?.let { v -> "${v.roundToInt()}%" } ?: it.subtitle.ifEmpty { if (on) "" else "Off" }
-            Text(sub, style = mt.caption, color = if (it.tone == Tone.Warn) p.warn else p.muted, maxLines = 1)
+            Text(
+                it.title, style = mt.body, color = if (on) p.text else p.muted, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                modifier = if (s != null) Modifier.width(112.dp) else Modifier.weight(1f),
+            )
+            if (s != null) {
+                fun at(x: Float, w: Int) = (x / w * 100f).coerceIn(0f, 100f)
+                Canvas(
+                    Modifier.weight(1f).height(36.dp).padding(horizontal = 8.dp)
+                        .pointerInput(monitor, it.id) { detectTapGestures { o -> send(at(o.x, size.width).roundToInt()) } }
+                        .pointerInput(monitor, it.id) {
+                            detectHorizontalDragGestures(
+                                onDragStart = { o -> dragging = at(o.x, size.width) },
+                                onDragEnd = { dragging?.let { v -> send(v.roundToInt()) }; dragging = null },
+                                onDragCancel = { dragging = null },
+                            ) { change, _ ->
+                                change.consume()
+                                dragging = at(change.position.x, size.width)
+                            }
+                        }
+                        .semantics { contentDescription = s.hint.ifEmpty { "Level" } },
+                ) {
+                    val y = size.height / 2
+                    val t = 3.dp.toPx()
+                    val x = size.width * (if (on) level else 0f) / 100f
+                    val c = if (on && level > 0f) fill else p.muted
+                    drawLine(p.card, Offset(0f, y), Offset(size.width, y), t, StrokeCap.Round)
+                    if (x > 0f) drawLine(c, Offset(0f, y), Offset(x, y), t, StrokeCap.Round)
+                    drawCircle(c, 6.dp.toPx(), Offset(x, y))
+                }
+            }
+            if (it.tone == Tone.Warn) Text(it.subtitle, style = mt.caption, color = p.warn, maxLines = 1)
             it.colour?.let { c -> ItemColourView(monitor, it.id, it.title, c, done, size = 18.dp) }
             Switch(
                 !done, { _ -> actions.toggle(monitor, it.id, !done) }, Modifier.scale(0.7f),
