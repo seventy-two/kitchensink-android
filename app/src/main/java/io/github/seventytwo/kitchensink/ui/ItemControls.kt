@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Slider
@@ -118,11 +117,11 @@ fun SwitchTile(monitor: String, it: Item, done: Boolean) {
             .tappable(shape = shape) { actions.toggle(monitor, it.id, !done) }
             .semantics { contentDescription = it.title },
     ) {
-        Row(Modifier.fillMaxWidth().height(44.dp).padding(start = 2.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            it.colour?.let { c -> ItemColourView(monitor, it.id, it.title, c, done, size = 18.dp) } ?: Spacer(Modifier.width(12.dp))
-            Text(it.title, style = mt.body, color = if (on) p.text else p.muted, maxLines = 1, modifier = Modifier.weight(1f).padding(start = 2.dp))
+        Row(Modifier.fillMaxWidth().height(44.dp).padding(start = 14.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(it.title, style = mt.body, color = if (on) p.text else p.muted, maxLines = 1, modifier = Modifier.weight(1f))
             val sub = dragging?.let { v -> "${v.roundToInt()}%" } ?: it.subtitle.ifEmpty { if (on) "" else "Off" }
             Text(sub, style = mt.caption, color = if (it.tone == Tone.Warn) p.warn else p.muted, maxLines = 1)
+            it.colour?.let { c -> ItemColourView(monitor, it.id, it.title, c, done, size = 18.dp) }
             Switch(
                 !done, { _ -> actions.toggle(monitor, it.id, !done) }, Modifier.scale(0.7f),
                 colors = SwitchDefaults.colors(
