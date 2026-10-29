@@ -147,6 +147,24 @@ class ScreenshotTest {
     }
 
     @Test @Robo(qualifiers = "w411dp-h891dp-port-xxhdpi")
+    fun lightsShort() {
+        val lights = snapshots.first { it.monitor == "lights" }
+        compose.setContent {
+            Themed {
+                Box(Modifier.fillMaxSize().background(LocalPalette.current.bg).padding(16.dp)) {
+                    Box(Modifier.fillMaxWidth().background(LocalPalette.current.card).padding(12.dp)) {
+                        BlockView("lights", lights.blocks[0].copy(buttons = true))
+                    }
+                }
+            }
+        }
+        compose.waitForIdle()
+        compose.onNodeWithText("Study").performClick()
+        compose.waitForIdle()
+        captureScreenRoboImage("build/screenshots/lights-short.png")
+    }
+
+    @Test @Robo(qualifiers = "w411dp-h891dp-port-xxhdpi")
     fun notSetUp() = shot("not-set-up", s = state(Config()).copy(conn = ConnState.NotConfigured, snapshots = emptyList()))
 
     @Test @Robo(qualifiers = "w411dp-h891dp-port-xxhdpi")

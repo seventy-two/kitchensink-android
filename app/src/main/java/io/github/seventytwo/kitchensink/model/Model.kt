@@ -85,6 +85,8 @@ data class Block(
     val downHint: String = "",
     /** A checklist drawn as on/off switches: on while an item isn't done. */
     val switches: Boolean = false,
+    /** A checklist drawn as small buttons in a row, each opening its controls (a summary block). */
+    val buttons: Boolean = false,
     val isPrivate: Boolean = false,
     val stats: List<Stat> = emptyList(),
     val columns: List<Column> = emptyList(),
@@ -173,6 +175,7 @@ private fun parseBlock(e: JsonElement): Block {
         upHint = j.str("upHint"),
         downHint = j.str("downHint"),
         switches = j.flag("switch"),
+        buttons = j.flag("buttons"),
         isPrivate = j.flag("private"),
         stats = j.array("stats").map(::parseStat),
         columns = j.array("columns").map {

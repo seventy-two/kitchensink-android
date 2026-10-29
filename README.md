@@ -46,7 +46,10 @@ for all three.
   slim row, flat on the panel: its title, its slider as a thin line (click or drag along it,
   sent when let go), a round colour swatch opening presets and a colour
   wheel, and an on/off switch. Tapping elsewhere on the row toggles it;
-  a warning subtitle (e.g. unavailable) shows before the swatch.
+  a warning subtitle (e.g. unavailable) shows before the swatch. A `buttons` block (the lights'
+  summary block, shown when the panel is short) is a row of small buttons,
+  lit with a dot of the item's colour while on; tapping one opens its tile
+  in a dialog.
 - Keeps the event stream open, reconnects with backoff, and catches up on
   events missed while offline.
 - The eye in the header, there when a monitor sends private figures, hides

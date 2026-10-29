@@ -13,6 +13,8 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -55,6 +57,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import io.github.seventytwo.kitchensink.model.Block
 import io.github.seventytwo.kitchensink.model.Colour
 import io.github.seventytwo.kitchensink.model.Item
 import io.github.seventytwo.kitchensink.model.Tone
@@ -70,6 +73,49 @@ import kotlin.math.sin
 
 /** 0xrrggbb as an opaque colour. */
 fun rgbColour(rgb: Int) = Color(0xff000000.toInt() or rgb)
+
+/**
+ * A checklist's items as small buttons in a row, wrapping; in a switches block, lit (with a dot of the item's
+ * colour) while on. Tapping one opens its controls, as a [SwitchTile], in a dialog.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun ChecklistButtons(monitor: String, b: Block) {
+    val p = LocalPalette.current
+    val mt = LocalMetrics.current
+    val actions = LocalActions.current
+    val state = LocalPanelState.current
+    var open by remember { mutableStateOf<String?>(null) }
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        for (it in b.items) {
+            val done = state.ticked["$monitor/${it.id}"] ?: it.done
+            val on = if (b.switches) !done else done
+            val dot = it.colour?.value?.let(::parseHexColour)?.takeIf { b.switches && on }
+            Row(
+                Modifier.clip(RoundedCornerShape(4.dp)).background(p.frame)
+                    .tappable(shape = RoundedCornerShape(4.dp)) {
+                        if (b.switches) open = it.id else actions.toggle(monitor, it.id, !done)
+                    }
+                    .padding(horizontal = 10.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (dot != null) {
+                    Box(Modifier.size(6.dp).background(rgbColour(dot), CircleShape))
+                    Spacer(Modifier.width(6.dp))
+                }
+                Text(it.title, style = mt.caption, color = if (on) p.text else p.muted, maxLines = 1)
+            }
+            if (open == it.id) {
+                Dialog(onDismissRequest = { open = null }) {
+                    Box(
+                        Modifier.fillMaxWidth().background(p.card, RoundedCornerShape(8.dp))
+                            .border(1.dp, p.border, RoundedCornerShape(8.dp)).padding(horizontal = 8.dp, vertical = 4.dp),
+                    ) { SwitchTile(monitor, it, done) }
+                }
+            }
+        }
+    }
+}
 
 /**
  * An item of a switches block (a light) as a slim row, flat on the panel: its title, a thin level line if it has a slider (tap or drag

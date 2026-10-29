@@ -275,6 +275,7 @@ private fun ListBlock(b: Block) {
  */
 @Composable
 private fun ChecklistBlock(monitor: String, b: Block) {
+    if (b.buttons) return ChecklistButtons(monitor, b)
     val p = LocalPalette.current
     val mt = LocalMetrics.current
     val actions = LocalActions.current
