@@ -141,7 +141,7 @@ class ScreenshotTest {
         }
         compose.waitForIdle()
         compose.onRoot().captureRoboImage("build/screenshots/lights.png")
-        compose.onAllNodesWithContentDescription("Colour")[2].performClick()
+        compose.onAllNodesWithContentDescription("Colour")[1].performClick()
         compose.waitForIdle()
         captureScreenRoboImage("build/screenshots/lights-colour.png")
     }

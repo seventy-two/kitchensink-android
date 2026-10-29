@@ -43,7 +43,7 @@ class ModelTest {
                  "rows": [[{"text": "Today", "url": "https://example.com", "detail": "dry"}, {"text": "15°", "tone": "bad"}]]},
                 {"type": "list", "items": [{"title": "Car", "image": "https://example.com/a.jpg", "tone": "warn"}]},
                 {"type": "text", "text": "hello", "unknown": {"nested": true}},
-                {"type": "checklist", "addHint": "Add a task…", "items": [{"id": "a1", "title": "Bins", "done": true}, {"id": "b2", "title": "Post", "slider": {"value": 140, "action": "brightness", "hint": "Brightness"}, "colour": {"value": "#ff8000", "action": "colour", "wheel": true, "presets": [{"label": "Warm white", "value": "2700K", "show": "#ffa757"}]}}]}
+                {"type": "checklist", "addHint": "Add a task…", "switch": true, "items": [{"id": "a1", "title": "Bins", "done": true}, {"id": "b2", "title": "Post", "slider": {"value": 140, "action": "brightness", "hint": "Brightness"}, "colour": {"value": "#ff8000", "action": "colour", "wheel": true, "presets": [{"label": "Warm white", "value": "2700K", "show": "#ffa757"}]}}]}
             ],
             "summary": [{"label": "Now", "value": "13°C", "tone": "good", "series": [1, 2]}, {"label": "Rain"}],
             "summaryStyle": "chips"
@@ -59,6 +59,7 @@ class ModelTest {
         assertEquals("a1", s.blocks[4].items[0].id)
         assertTrue(s.blocks[4].items[0].done)
         assertFalse(s.blocks[4].items[1].done)
+        assertTrue(s.blocks[4].switches)
         assertNull(s.blocks[4].items[0].slider)
         assertNull(s.blocks[4].items[0].colour)
         assertEquals(Slider(100, "brightness", "Brightness"), s.blocks[4].items[1].slider)
