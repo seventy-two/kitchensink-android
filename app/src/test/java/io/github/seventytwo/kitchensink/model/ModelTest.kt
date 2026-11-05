@@ -147,4 +147,14 @@ class ModelTest {
         assertTrue(mine.hasPrivate())
         assertEquals(null, mine.withoutPrivate().summaryBlock)
     }
+
+    @Test
+    fun readsUntilAndExpires() {
+        val e = parseEvent("""{"id": 1, "until": "2026-10-12T16:00:00Z", "expires": "2026-10-12T15:30:00Z"}""")
+        assertEquals(parseTime("2026-10-12T16:00:00Z"), e.until)
+        assertEquals(parseTime("2026-10-12T15:30:00Z"), e.expires)
+        assertFalse(e.over(e.expires - 1))
+        assertTrue(e.over(e.expires))
+        assertFalse(parseEvent("""{"id": 2}""").over(Long.MAX_VALUE))
+    }
 }

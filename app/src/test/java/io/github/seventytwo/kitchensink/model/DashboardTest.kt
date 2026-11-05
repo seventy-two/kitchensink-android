@@ -74,4 +74,22 @@ class DashboardTest {
         assertEquals(Dashboard.MAX_CLEARED, r.cleared.ids.size)
         assertFalse(5L in r.cleared.ids)
     }
+
+    @Test
+    fun dropsEventsPastTheirUntil() {
+        val m = Dashboard()
+        assertTrue(m.addEvent(Event(id = 1, until = 100), now = 50))
+        assertTrue(m.addEvent(Event(id = 2, expires = 200), now = 50))
+        assertTrue(m.addEvent(Event(id = 3), now = 50))
+        // One already over, e.g. replayed from the history, isn't kept.
+        assertFalse(m.addEvent(Event(id = 4, until = 40), now = 50))
+        assertFalse(m.dropOver(60))
+        assertTrue(m.dropOver(100))
+        assertEquals(listOf(3L, 2L), m.eventList.map { it.id })
+        assertTrue(m.dropOver(250))
+        assertEquals(listOf(3L), m.eventList.map { it.id })
+        // An update that's over takes it out.
+        assertFalse(m.addEvent(Event(id = 3, until = 250), now = 300))
+        assertTrue(m.eventList.isEmpty())
+    }
 }

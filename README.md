@@ -50,10 +50,9 @@ for all three.
   summary block, shown when the panel is short) is a row of small buttons,
   lit with a dot of the item's colour while on; tapping one opens its tile
   in a dialog.
-- Keeps the event stream open, reconnects with backoff, and catches up on
-  events missed while offline.
-- The eye in the header, there when a monitor sends private figures, hides
-  or shows them.
+- Events leave Recent once past their `until` (or a temporary event's
+  `expires`), checked each minute; ones already past when they arrive,
+  e.g. replayed history, never show or notify.
 - Swipe a Recent card away, or tap its ×, to clear it; the × by the heading
   clears them all. Cleared events stay cleared after a restart.
 - **OLED care** and the **cat**, as on Windows: shift, true black, dim when

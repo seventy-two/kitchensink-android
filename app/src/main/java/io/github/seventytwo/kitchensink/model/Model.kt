@@ -128,7 +128,14 @@ data class Event(
     val time: Long = 0,
     val priority: Priority = Priority.Normal,
     val quiet: Boolean = false,
-)
+    /** If set (Unix seconds), the event is temporary: it's dropped then. */
+    val expires: Long = 0,
+    /** If set (Unix seconds), when the event stops being relevant: it's in Recent until then, then dropped. */
+    val until: Long = 0,
+) {
+    /** Whether it's past its [expires] or [until] at [now]. */
+    fun over(now: Long) = (expires > 0 && expires <= now) || (until > 0 && until <= now)
+}
 
 internal val json = Json { ignoreUnknownKeys = true }
 
@@ -252,6 +259,8 @@ fun parseEvent(e: JsonElement): Event {
         time = parseTime(j.str("time")),
         priority = parsePriority(j.str("priority")),
         quiet = j.flag("quiet"),
+        expires = parseTime(j.str("expires")),
+        until = parseTime(j.str("until")),
     )
 }
 
@@ -296,3 +305,4 @@ fun parseHexColour(s: String): Int? =
 
 /** Writes 0xrrggbb as "#rrggbb". */
 fun hexColour(rgb: Int): String = "#%06x".format(rgb and 0xffffff)
+

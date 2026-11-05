@@ -56,16 +56,17 @@ class Dashboard {
     /**
      * Stores an event and reports whether it was new. One it has already is
      * replaced, as the server updates events (e.g. a price move since
-     * changed). Cleared ones aren't stored again, e.g. when history is replayed.
+     * changed). Cleared ones aren't stored again, e.g. when history is replayed, nor ones already past their
+     * `until` or `expires` at [now] (Unix seconds).
      */
-    fun addEvent(e: Event): Boolean {
+    fun addEvent(e: Event, now: Long = System.currentTimeMillis() / 1000): Boolean {
         val had = events.indexOfFirst { it.id == e.id }
         if (had >= 0) {
-            events[had] = e
+            if (e.over(now)) events.removeAt(had) else events[had] = e
             return false
         }
         lastEventId = maxOf(lastEventId, e.id)
-        if (e.id <= cleared.through || e.id in cleared.ids) return false
+        if (e.id <= cleared.through || e.id in cleared.ids || e.over(now)) return false
         // Keep newest first; events nearly always arrive in order.
         var i = 0
         while (i < events.size && events[i].id > e.id) i++
@@ -73,6 +74,9 @@ class Dashboard {
         while (events.size > MAX_EVENTS) events.removeLast()
         return true
     }
+
+    /** Drops events past their `until` or `expires` at [now]; says whether any went. */
+    fun dropOver(now: Long): Boolean = events.removeAll { it.over(now) }
 
     /** Removes an event from Recent. It stays cleared through reconnects and, via [cleared], restarts. */
     fun clear(id: Long) {

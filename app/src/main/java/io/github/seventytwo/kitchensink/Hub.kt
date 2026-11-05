@@ -78,6 +78,13 @@ class Hub(private val context: Context, private val store: ConfigStore, http: Ok
                 if (inbox.isEmpty) publish()
             }
         }
+        // Events drop out of Recent once past their until; look each minute.
+        scope.launch {
+            while (true) {
+                delay(60_000)
+                if (dashboard.dropOver(System.currentTimeMillis() / 1000)) publish()
+            }
+        }
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onStart(owner: LifecycleOwner) {
                 foreground = true
