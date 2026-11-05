@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -52,6 +53,8 @@ fun Feed(
     catTime: (() -> Double)? = null,
     /** Whether to say "Recent"; not on a page whose tab already does. */
     heading: Boolean = true,
+    /** Drawn at the foot of the column, below the events (the lights' card). */
+    footer: (@Composable () -> Unit)? = null,
 ) {
     val p = LocalPalette.current
     val mt = LocalMetrics.current
@@ -64,9 +67,13 @@ fun Feed(
         }
         if (events.isEmpty()) {
             Text("Nothing new.", style = mt.body, color = p.muted)
+            if (footer != null) {
+                Spacer(Modifier.weight(1f))
+                footer()
+            }
             return@Column
         }
-        LazyColumn(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+        LazyColumn(Modifier.fillMaxWidth().then(if (footer != null) Modifier.weight(1f) else Modifier), verticalArrangement = Arrangement.spacedBy(1.dp)) {
             items(events.take(150), key = { it.id }) { e ->
                 val swipe = rememberSwipeToDismissBoxState()
                 LaunchedEffect(swipe.currentValue) {
@@ -77,6 +84,7 @@ fun Feed(
                 }
             }
         }
+        footer?.invoke()
     }
 }
 

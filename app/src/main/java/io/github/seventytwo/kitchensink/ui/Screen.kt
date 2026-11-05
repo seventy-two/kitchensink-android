@@ -52,6 +52,7 @@ import io.github.seventytwo.kitchensink.model.hasPrivate
 import io.github.seventytwo.kitchensink.model.oledDim
 import io.github.seventytwo.kitchensink.model.oledShift
 import io.github.seventytwo.kitchensink.model.oledSwapSides
+import io.github.seventytwo.kitchensink.model.switchesPanel
 import io.github.seventytwo.kitchensink.model.useCompact
 import io.github.seventytwo.kitchensink.model.withoutPrivate
 import io.github.seventytwo.kitchensink.net.ConnState
@@ -239,10 +240,14 @@ private fun Body(state: ScreenState, cb: ScreenCallbacks, compact: Boolean) {
             val feedW = if (compact) 300.dp else 340.dp
             // OLED care swaps the side column's side every other hour.
             val feedFirst = c.oled.swap && oledSwapSides(state.now)
+            // The lights sit at the foot of the Recent column as a card of
+            // their own, rather than among the panels.
+            val lights = switchesPanel(panels)
+            val rest = if (lights == null) panels else panels.filter { it.monitor != lights.monitor }
             Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(gap)) {
-                if (feedFirst) FeedColumn(state, cb, Modifier.width(feedW))
-                PanelsColumn(panels, pins, compact, height, cb, Modifier.weight(1f))
-                if (!feedFirst) FeedColumn(state, cb, Modifier.width(feedW))
+                if (feedFirst) FeedColumn(state, cb, Modifier.width(feedW), lights = lights)
+                PanelsColumn(rest, pins, compact, height, cb, Modifier.weight(1f))
+                if (!feedFirst) FeedColumn(state, cb, Modifier.width(feedW), lights = lights)
             }
         } else {
             Pages(state, cb, panels, pins, compact, height)
@@ -251,10 +256,11 @@ private fun Body(state: ScreenState, cb: ScreenCallbacks, compact: Boolean) {
 }
 
 @Composable
-private fun FeedColumn(state: ScreenState, cb: ScreenCallbacks, modifier: Modifier, heading: Boolean = true) {
+private fun FeedColumn(state: ScreenState, cb: ScreenCallbacks, modifier: Modifier, heading: Boolean = true, lights: Snapshot? = null) {
     Feed(
         state.events, cb::titleOf, state.now, cb::clear, cb::clearAll, modifier,
         cat = state.config.cat, catTime = state.clock, heading = heading,
+        footer = lights?.let { { SwitchesCard(it, Modifier.padding(top = LocalMetrics.current.gap)) } },
     )
 }
 

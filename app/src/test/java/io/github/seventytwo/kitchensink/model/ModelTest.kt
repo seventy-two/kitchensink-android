@@ -157,4 +157,23 @@ class ModelTest {
         assertTrue(e.over(e.expires))
         assertFalse(parseEvent("""{"id": 2}""").over(Long.MAX_VALUE))
     }
+
+    @Test
+    fun groupsNumberedSwitches() {
+        assertEquals("Hallway", switchGroup("Hallway 2"))
+        assertEquals("Living room", switchGroup("Living room 12"))
+        assertEquals("", switchGroup("Study"))
+        assertEquals("", switchGroup("R2D2"))
+        assertEquals("", switchGroup("12"))
+    }
+
+    @Test
+    fun findsTheSwitchesPanel() {
+        val lights = parseSnapshot("""{"monitor": "lights", "summaryBlock": {"type": "checklist", "switch": true, "buttons": true, "items": [{"id": "a", "title": "A"}]}}""")
+        val todo = parseSnapshot("""{"monitor": "todo", "summaryBlock": {"type": "checklist", "buttons": true, "items": [{"id": "a", "title": "A"}]}}""")
+        assertEquals("lights", switchesPanel(listOf(todo, lights))?.monitor)
+        assertEquals(null, switchesPanel(listOf(todo)))
+        assertEquals(null, switchesPanel(listOf(lights.copy(background = true))))
+    }
 }
+

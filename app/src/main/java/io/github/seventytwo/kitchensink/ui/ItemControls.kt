@@ -1,7 +1,9 @@
 // A checklist item's slider and colour swatch (the lights' brightness and
 // colour). In a switches block (the lights) each item is a slim tile: its
 // name, its brightness as a thin line, a swatch opening a dialog of
-// presets and a colour wheel, and a switch turning it on and off.
+// presets and a colour wheel, and a switch turning it on and off. As
+// buttons (the lights' short view, and their card in the Recent column)
+// each has a bulb, numbered lights joined into one.
 package io.github.seventytwo.kitchensink.ui
 
 import androidx.compose.foundation.Canvas
@@ -25,6 +27,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
@@ -42,7 +45,10 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -60,6 +66,8 @@ import androidx.compose.ui.window.Dialog
 import io.github.seventytwo.kitchensink.model.Block
 import io.github.seventytwo.kitchensink.model.Colour
 import io.github.seventytwo.kitchensink.model.Item
+import io.github.seventytwo.kitchensink.model.Snapshot
+import io.github.seventytwo.kitchensink.model.switchGroup
 import io.github.seventytwo.kitchensink.model.Tone
 import io.github.seventytwo.kitchensink.model.Slider as ItemSlider
 import io.github.seventytwo.kitchensink.model.hexColour
@@ -74,47 +82,137 @@ import kotlin.math.sin
 /** 0xrrggbb as an opaque colour. */
 fun rgbColour(rgb: Int) = Color(0xff000000.toInt() or rgb)
 
+/** A switch button's bulb while its light is on and has no colour of its own: a warm white. */
+private val WarmBulb = Color(0xFFFFD68C)
+
 /**
- * A checklist's items as small buttons in a row, wrapping; in a switches block, lit (with a dot of the item's
- * colour) while on. Tapping one opens its controls, as a [SwitchTile], in a dialog.
+ * A checklist's items as small buttons in a row, wrapping; in a switches block (the lights) each has a bulb, lit
+ * in the light's colour (or a warm white) while on, and switches named alike but for a number at the end
+ * (Hallway 1, Hallway 2) are one joined button, the first part named in full, the rest only by number. A group
+ * wraps whole. [stack] puts each group on a line of its own, the full width, shared equally (the Recent column's
+ * card). Tapping a switch opens its controls, as a [SwitchTile], in a dialog.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ChecklistButtons(monitor: String, b: Block) {
+fun ChecklistButtons(monitor: String, b: Block, stack: Boolean = false) {
+    val groups = buttonGroups(b)
+    if (stack && b.switches) {
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            for (g in groups) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(1.dp)) {
+                    for ((i, it) in g.withIndex()) ChecklistButton(monitor, b, it, i, g.size, Modifier.weight(1f))
+                }
+            }
+        }
+        return
+    }
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(if (b.switches) 8.dp else 6.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        for (g in groups) {
+            Row(horizontalArrangement = Arrangement.spacedBy(1.dp)) {
+                for ((i, it) in g.withIndex()) ChecklistButton(monitor, b, it, i, g.size)
+            }
+        }
+    }
+}
+
+/** The block's items in their groups: runs of switches named alike but for a number at the end; one each otherwise. */
+fun buttonGroups(b: Block): List<List<Item>> {
+    val out = mutableListOf<MutableList<Item>>()
+    var last = ""
+    for (it in b.items) {
+        val g = if (b.switches) switchGroup(it.title) else ""
+        if (g.isNotEmpty() && g == last && out.isNotEmpty()) out.last() += it else out += mutableListOf(it)
+        last = g
+    }
+    return out
+}
+
+/** One of [ChecklistButtons]' buttons: [index] of a group of [count], rounded only at the group's ends. */
+@Composable
+private fun ChecklistButton(monitor: String, b: Block, it: Item, index: Int, count: Int, modifier: Modifier = Modifier) {
     val p = LocalPalette.current
     val mt = LocalMetrics.current
     val actions = LocalActions.current
     val state = LocalPanelState.current
-    var open by remember { mutableStateOf<String?>(null) }
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        for (it in b.items) {
-            val done = state.ticked["$monitor/${it.id}"] ?: it.done
-            val on = if (b.switches) !done else done
-            val dot = it.colour?.value?.let(::parseHexColour)?.takeIf { b.switches && on }
-            Row(
-                Modifier.clip(RoundedCornerShape(4.dp)).background(p.frame)
-                    .tappable(shape = RoundedCornerShape(4.dp)) {
-                        if (b.switches) open = it.id else actions.toggle(monitor, it.id, !done)
-                    }
-                    .padding(horizontal = 10.dp, vertical = 6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                if (dot != null) {
-                    Box(Modifier.size(6.dp).background(rgbColour(dot), CircleShape))
-                    Spacer(Modifier.width(6.dp))
-                }
-                Text(it.title, style = mt.caption, color = if (on) p.text else p.muted, maxLines = 1)
-            }
-            if (open == it.id) {
-                Dialog(onDismissRequest = { open = null }) {
-                    Box(
-                        Modifier.fillMaxWidth().background(p.card, RoundedCornerShape(8.dp))
-                            .border(1.dp, p.border, RoundedCornerShape(8.dp)).padding(horizontal = 8.dp, vertical = 4.dp),
-                    ) { SwitchTile(monitor, it, done) }
-                }
-            }
+    var open by remember { mutableStateOf(false) }
+    val done = state.ticked["$monitor/${it.id}"] ?: it.done
+    val on = if (b.switches) !done else done
+    val rgb = it.colour?.value?.let(::parseHexColour)?.takeIf { b.switches && on }
+    val label = if (index > 0) it.title.substring(switchGroup(it.title).length + 1) else it.title
+    val r = 4.dp
+    val shape = RoundedCornerShape(
+        topStart = if (index == 0) r else 0.dp, bottomStart = if (index == 0) r else 0.dp,
+        topEnd = if (index == count - 1) r else 0.dp, bottomEnd = if (index == count - 1) r else 0.dp,
+    )
+    Row(
+        modifier.clip(shape).background(p.frame)
+            .tappable(shape = shape) { if (b.switches) open = true else actions.toggle(monitor, it.id, !done) }
+            .semantics(mergeDescendants = true) { contentDescription = it.title }
+            .padding(horizontal = 10.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (b.switches) {
+            Icon(BulbIcon, null, Modifier.size(15.dp), tint = if (!on) p.muted.copy(alpha = 0.6f) else rgb?.let(::rgbColour) ?: WarmBulb)
+            Spacer(Modifier.width(5.dp))
+        }
+        Text(label, style = mt.caption, color = if (on) p.text else p.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+    if (open) {
+        Dialog(onDismissRequest = { open = false }) {
+            Box(
+                Modifier.fillMaxWidth().background(p.card, RoundedCornerShape(8.dp))
+                    .border(1.dp, p.border, RoundedCornerShape(8.dp)).padding(horizontal = 8.dp, vertical = 4.dp),
+            ) { SwitchTile(monitor, it, done) }
         }
     }
+}
+
+/**
+ * The lights' buttons as a small card of their own, one group a line, for the Recent column: always there, so
+ * the lights are a tap away whatever else is going on. A failed check shows under them.
+ */
+@Composable
+fun SwitchesCard(s: Snapshot, modifier: Modifier = Modifier) {
+    val p = LocalPalette.current
+    val mt = LocalMetrics.current
+    val b = s.summaryBlock ?: return
+    Column(modifier.fillMaxWidth().background(p.card).bevel().padding(horizontal = 8.dp, vertical = 8.dp)) {
+        ChecklistButtons(s.monitor, b, stack = true)
+        if (s.error.isNotEmpty()) {
+            Spacer(Modifier.height(4.dp))
+            Text(s.error, style = mt.caption, color = p.warn)
+        }
+    }
+}
+
+/** A light bulb, filled, for the lights' buttons. */
+val BulbIcon: ImageVector by lazy {
+    ImageVector.Builder("Bulb", 24.dp, 24.dp, 24f, 24f).apply {
+        path(fill = SolidColor(Color.Black)) {
+            // The glass: a globe narrowing to its neck.
+            moveTo(9f, 16.4f)
+            curveTo(9f, 14.2f, 5.4f, 12.9f, 5.4f, 9f)
+            arcTo(6.6f, 6.6f, 0f, isMoreThanHalf = false, isPositiveArc = true, x1 = 18.6f, y1 = 9f)
+            curveTo(18.6f, 12.9f, 15f, 14.2f, 15f, 16.4f)
+            close()
+            // The cap, in two bands.
+            moveTo(9.2f, 17.4f)
+            lineTo(14.8f, 17.4f)
+            lineTo(14.8f, 18.9f)
+            lineTo(9.2f, 18.9f)
+            close()
+            moveTo(10f, 19.7f)
+            lineTo(14f, 19.7f)
+            lineTo(14f, 20.4f)
+            quadTo(14f, 21.4f, 13f, 21.4f)
+            lineTo(11f, 21.4f)
+            quadTo(10f, 21.4f, 10f, 20.4f)
+            close()
+        }
+    }.build()
 }
 
 /**

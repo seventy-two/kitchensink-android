@@ -48,8 +48,17 @@ for all three.
   wheel, and an on/off switch. Tapping elsewhere on the row toggles it;
   a warning subtitle (e.g. unavailable) shows before the swatch. A `buttons` block (the lights'
   summary block, shown when the panel is short) is a row of small buttons,
-  lit with a dot of the item's colour while on; tapping one opens its tile
-  in a dialog.
+  each with a bulb lit in the light's colour (a warm white without one)
+  while on; tapping one opens its tile in a dialog. Lights named alike but
+  for a number at the end (Hallway 1, Hallway 2) are one joined button,
+  the rest of the group named only by number, and a group wraps whole.
+- Where Recent is a column (from 720 dp wide), the lights live at its foot
+  as a small card that's always there, one group a line, the card's full
+  width, as on Windows. On a phone's pages they're a panel like the rest.
+- Keeps the event stream open, reconnects with backoff, and catches up on
+  events missed while offline.
+- The eye in the header, there when a monitor sends private figures, hides
+  or shows them.
 - Events leave Recent once past their `until` (or a temporary event's
   `expires`), checked each minute; ones already past when they arrive,
   e.g. replayed history, never show or notify.

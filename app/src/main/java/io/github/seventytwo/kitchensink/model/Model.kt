@@ -306,3 +306,22 @@ fun parseHexColour(s: String): Int? =
 /** Writes 0xrrggbb as "#rrggbb". */
 fun hexColour(rgb: Int): String = "#%06x".format(rgb and 0xffffff)
 
+/**
+ * What a switch's name is a numbered one of: "Hallway" for "Hallway 2"; empty when it doesn't end in a number
+ * after a space.
+ */
+fun switchGroup(title: String): String {
+    var i = title.length
+    while (i > 0 && title[i - 1].isDigit()) i--
+    if (i == title.length || i < 2 || title[i - 1] != ' ') return ""
+    return title.substring(0, i - 1)
+}
+
+/**
+ * The monitor whose short view is a row of switch buttons (the lights), which sits in the Recent column as a
+ * card of its own when there is one; null if there's none.
+ */
+fun switchesPanel(snapshots: List<Snapshot>): Snapshot? = snapshots.firstOrNull {
+    val b = it.summaryBlock
+    !it.background && b != null && b.type == "checklist" && b.buttons && b.switches && b.items.isNotEmpty()
+}
