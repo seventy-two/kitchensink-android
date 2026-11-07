@@ -122,6 +122,103 @@
      "noDelete": true,
      "items": [
       {
+       "id": "room:Living room",
+       "title": "Living room",
+       "subtitle": "Both on",
+       "slider": {
+        "value": 70,
+        "action": "brightness",
+        "hint": "Brightness"
+       },
+       "colour": {
+        "value": "#ffa757",
+        "action": "colour",
+        "wheel": true,
+        "presets": [
+         {
+          "label": "Candle",
+          "value": "2200K",
+          "show": "#ff9227"
+         },
+         {
+          "label": "Warm white",
+          "value": "2700K",
+          "show": "#ffa757"
+         },
+         {
+          "label": "Soft white",
+          "value": "3500K",
+          "show": "#ffc18d"
+         },
+         {
+          "label": "Neutral white",
+          "value": "4500K",
+          "show": "#ffdbba"
+         },
+         {
+          "label": "Daylight",
+          "value": "6500K",
+          "show": "#fffefa"
+         },
+         {
+          "label": "Red",
+          "value": "#ff0000",
+          "show": "#ff0000"
+         },
+         {
+          "label": "Orange",
+          "value": "#ff7300",
+          "show": "#ff7300"
+         },
+         {
+          "label": "Amber",
+          "value": "#ffb000",
+          "show": "#ffb000"
+         },
+         {
+          "label": "Yellow",
+          "value": "#ffe600",
+          "show": "#ffe600"
+         },
+         {
+          "label": "Green",
+          "value": "#00ff2a",
+          "show": "#00ff2a"
+         },
+         {
+          "label": "Teal",
+          "value": "#00ffbf",
+          "show": "#00ffbf"
+         },
+         {
+          "label": "Cyan",
+          "value": "#00d5ff",
+          "show": "#00d5ff"
+         },
+         {
+          "label": "Blue",
+          "value": "#0033ff",
+          "show": "#0033ff"
+         },
+         {
+          "label": "Purple",
+          "value": "#8c00ff",
+          "show": "#8c00ff"
+         },
+         {
+          "label": "Magenta",
+          "value": "#ff00d4",
+          "show": "#ff00d4"
+         },
+         {
+          "label": "Pink",
+          "value": "#ff4d8c",
+          "show": "#ff4d8c"
+         }
+        ]
+       }
+      },
+      {
        "id": "light.living1",
        "title": "Living room 1",
        "subtitle": "80%",
@@ -424,6 +521,16 @@
        "done": true
       },
       {
+       "id": "room:Hallway",
+       "title": "Hallway",
+       "subtitle": "1 of 2 on",
+       "slider": {
+        "value": 0,
+        "action": "brightness",
+        "hint": "Brightness"
+       }
+      },
+      {
        "id": "light.hall1",
        "title": "Hallway 1",
        "subtitle": "",
@@ -461,6 +568,103 @@
     "type": "checklist",
     "noDelete": true,
     "items": [
+     {
+      "id": "room:Living room",
+      "title": "Living room",
+      "subtitle": "Both on",
+      "slider": {
+       "value": 70,
+       "action": "brightness",
+       "hint": "Brightness"
+      },
+      "colour": {
+       "value": "#ffa757",
+       "action": "colour",
+       "wheel": true,
+       "presets": [
+        {
+         "label": "Candle",
+         "value": "2200K",
+         "show": "#ff9227"
+        },
+        {
+         "label": "Warm white",
+         "value": "2700K",
+         "show": "#ffa757"
+        },
+        {
+         "label": "Soft white",
+         "value": "3500K",
+         "show": "#ffc18d"
+        },
+        {
+         "label": "Neutral white",
+         "value": "4500K",
+         "show": "#ffdbba"
+        },
+        {
+         "label": "Daylight",
+         "value": "6500K",
+         "show": "#fffefa"
+        },
+        {
+         "label": "Red",
+         "value": "#ff0000",
+         "show": "#ff0000"
+        },
+        {
+         "label": "Orange",
+         "value": "#ff7300",
+         "show": "#ff7300"
+        },
+        {
+         "label": "Amber",
+         "value": "#ffb000",
+         "show": "#ffb000"
+        },
+        {
+         "label": "Yellow",
+         "value": "#ffe600",
+         "show": "#ffe600"
+        },
+        {
+         "label": "Green",
+         "value": "#00ff2a",
+         "show": "#00ff2a"
+        },
+        {
+         "label": "Teal",
+         "value": "#00ffbf",
+         "show": "#00ffbf"
+        },
+        {
+         "label": "Cyan",
+         "value": "#00d5ff",
+         "show": "#00d5ff"
+        },
+        {
+         "label": "Blue",
+         "value": "#0033ff",
+         "show": "#0033ff"
+        },
+        {
+         "label": "Purple",
+         "value": "#8c00ff",
+         "show": "#8c00ff"
+        },
+        {
+         "label": "Magenta",
+         "value": "#ff00d4",
+         "show": "#ff00d4"
+        },
+        {
+         "label": "Pink",
+         "value": "#ff4d8c",
+         "show": "#ff4d8c"
+        }
+       ]
+      }
+     },
      {
       "id": "light.living1",
       "title": "Living room 1",
@@ -762,6 +966,16 @@
        "hint": "Brightness"
       },
       "done": true
+     },
+     {
+      "id": "room:Hallway",
+      "title": "Hallway",
+      "subtitle": "1 of 2 on",
+      "slider": {
+       "value": 0,
+       "action": "brightness",
+       "hint": "Brightness"
+      }
      },
      {
       "id": "light.hall1",

@@ -88,7 +88,8 @@ private val WarmBulb = Color(0xFFFFD68C)
 /**
  * A checklist's items as small buttons in a row, wrapping; in a switches block (the lights) each has a bulb, lit
  * in the light's colour (or a warm white) while on, and switches named alike but for a number at the end
- * (Hallway 1, Hallway 2) are one joined button, the first part named in full, the rest only by number. A group
+ * (Hallway 1, Hallway 2) are one joined button, the first part named in full, the rest only by number; the
+ * server's row for the whole room ("Hallway"), just before them, heads it. A group
  * wraps whole. [stack] puts each group on a line of its own, the full width, shared equally (the Recent column's
  * card). Tapping a switch opens its controls, as a [SwitchTile], in a dialog.
  */
@@ -121,11 +122,13 @@ fun ChecklistButtons(monitor: String, b: Block, stack: Boolean = false) {
 /** The block's items in their groups: runs of switches named alike but for a number at the end; one each otherwise. */
 fun buttonGroups(b: Block): List<List<Item>> {
     val out = mutableListOf<MutableList<Item>>()
-    var last = ""
+    var last: Item? = null
     for (it in b.items) {
         val g = if (b.switches) switchGroup(it.title) else ""
-        if (g.isNotEmpty() && g == last && out.isNotEmpty()) out.last() += it else out += mutableListOf(it)
-        last = g
+        // Joined to the switch before if that's one of the same room, or the room's own row ("Hallway").
+        val joins = g.isNotEmpty() && last != null && (g == switchGroup(last.title) || g == last.title)
+        if (joins) out.last() += it else out += mutableListOf(it)
+        last = it
     }
     return out
 }

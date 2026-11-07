@@ -26,5 +26,15 @@ class PanelsTest {
         // Only switches are joined.
         assertEquals(6, buttonGroups(b.copy(switches = false)).size)
     }
+
+    @Test
+    fun roomRowHeadsItsLights() {
+        val titles = listOf("Living room", "Living room 1", "Living room 2", "Study", "Hallway 1")
+        val b = Block(type = "checklist", switches = true, items = titles.map { Item(id = it, title = it) })
+        assertEquals(
+            listOf(listOf("Living room", "Living room 1", "Living room 2"), listOf("Study"), listOf("Hallway 1")),
+            buttonGroups(b).map { g -> g.map { it.title } },
+        )
+    }
 }
 

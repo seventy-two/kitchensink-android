@@ -54,7 +54,9 @@ for all three.
   each with a bulb lit in the light's colour (a warm white without one)
   while on; tapping one opens its tile in a dialog. Lights named alike but
   for a number at the end (Hallway 1, Hallway 2) are one joined button,
-  the rest of the group named only by number, and a group wraps whole.
+  the rest of the group named only by number, and a group wraps whole. The
+  server's row for the whole room ("Hallway", switching them together)
+  heads the group: Hallway | 1 | 2.
 - Where Recent is a column (from 720 dp wide), the lights live at its foot
   as a small card that's always there, one group a line, the card's full
   width, as on Windows. On a phone's pages they're a panel like the rest.
