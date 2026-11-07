@@ -137,6 +137,18 @@ class ModelTest {
     }
 
     @Test
+    fun readsCellActions() {
+        val s = parseSnapshot(
+            """{"blocks": [{"type": "table", "columns": [{"title": "Item"}, {"title": ""}],
+                 "rows": [[{"text": "Milk"}, {"text": "", "action": {"type": "used", "id": "a1", "label": "Used up"}}],
+                          [{"text": "Bread"}, {"text": "", "action": {"label": "no type"}}]]}]}""",
+        )
+        assertEquals(CellAction("used", "a1", "Used up"), s.blocks[0].rows[0][1].action)
+        assertEquals(null, s.blocks[0].rows[0][0].action)
+        assertEquals(null, s.blocks[0].rows[1][1].action)
+    }
+
+    @Test
     fun readsSummaryBlock() {
         val s = parseSnapshot("""{"summaryBlock": {"type": "table", "columns": [{"title": "Today", "align": "right"}], "rows": [[{"text": "+3"}]]}}""")
         assertEquals("table", s.summaryBlock?.type)

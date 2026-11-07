@@ -40,6 +40,9 @@ for all three.
   they're hidden in the app. Tapping it opens the app.
 - Checklists (the `todo` monitor) can be ticked, added to and deleted from;
   a tick shows at once, ahead of the server's update.
+- Table cells with an `action` (Food's used-up cross, Big box's ignore,
+  Reverb's reject) are a cross button; tapped, it sends the action and the
+  row hides at once, ahead of the server's update.
 - Checklist items with a `slider` or `colour` get a slider on a line of
   their own, sent when let go, and a round swatch that opens the presets
   and a colour wheel. A `switch` block (the `lights` monitor) draws each item as a

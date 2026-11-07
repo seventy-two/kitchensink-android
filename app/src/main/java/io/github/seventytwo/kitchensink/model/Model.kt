@@ -36,7 +36,17 @@ data class Stat(
 
 data class Column(val title: String = "", val align: Align = Align.Left, val fill: Boolean = false)
 
-data class Cell(val text: String = "", val url: String = "", val tone: Tone = Tone.None, val detail: String = "")
+data class Cell(
+    val text: String = "",
+    val url: String = "",
+    val tone: Tone = Tone.None,
+    val detail: String = "",
+    /** A button drawn in place of the text (a used-up or ignore cross). */
+    val action: CellAction? = null,
+)
+
+/** A table cell's button: tapped, it sends the monitor an action of [type] for [id]; [label] says what it does. */
+data class CellAction(val type: String = "", val id: String = "", val label: String = "")
 
 /** A checklist item's 0-100 control (a light's brightness): let go at a new value, it sends [action] with the value. */
 data class Slider(val value: Int = 0, val action: String = "", val hint: String = "")
@@ -197,7 +207,11 @@ private fun parseBlock(e: JsonElement): Block {
         rows = j.array("rows").map { r ->
             (r as? JsonArray ?: emptyList()).map {
                 val c = it.obj()
-                Cell(c.str("text"), c.str("url"), c.tone(), c.str("detail"))
+                Cell(
+                    c.str("text"), c.str("url"), c.tone(), c.str("detail"),
+                    action = (c["action"] as? JsonObject)?.let { a -> CellAction(a.str("type"), a.str("id"), a.str("label")) }
+                        ?.takeIf { a -> a.type.isNotEmpty() },
+                )
             }
         },
         items = j.array("items").map {

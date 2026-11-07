@@ -164,6 +164,43 @@ class ScreenshotTest {
         captureScreenRoboImage("build/screenshots/lights-short.png")
     }
 
+    // A table with a cross per row (the Food panel's used-up button); tapping one hides its row.
+    @Test @Robo(qualifiers = "w411dp-h891dp-port-xxhdpi")
+    fun tableActions() {
+        val food = parseSnapshot(
+            """{"monitor": "groceries", "blocks": [{"type": "table",
+                "columns": [{"title": "Item", "fill": true}, {"title": "Use by", "align": "right"}, {"title": ""}],
+                "rows": [
+                  [{"text": "Spinach", "detail": "fridge"}, {"text": "today", "tone": "warn"}, {"action": {"type": "used", "id": "1", "label": "Used up or thrown away"}}],
+                  [{"text": "Mushrooms", "detail": "fridge"}, {"text": "tomorrow"}, {"action": {"type": "used", "id": "2", "label": "Used up or thrown away"}}],
+                  [{"text": "Halloumi", "detail": "fridge"}, {"text": "Mon"}, {"action": {"type": "used", "id": "3", "label": "Used up or thrown away"}}]]}]}""",
+        )
+        val sent = mutableListOf<String>()
+        val actions = object : Actions by Actions.None {
+            override fun send(monitor: String, type: String, id: String, text: String, done: Boolean?) {
+                sent += "$monitor/$type/$id"
+            }
+        }
+        compose.setContent {
+            Themed {
+                CompositionLocalProvider(LocalActions provides actions) {
+                    Box(Modifier.fillMaxSize().background(LocalPalette.current.bg).padding(16.dp)) {
+                        Box(Modifier.fillMaxWidth().background(LocalPalette.current.card).padding(12.dp)) {
+                            BlockView("groceries", food.blocks[0])
+                        }
+                    }
+                }
+            }
+        }
+        compose.waitForIdle()
+        compose.onRoot().captureRoboImage("build/screenshots/table-actions.png")
+        compose.onAllNodesWithContentDescription("Used up or thrown away")[1].performClick()
+        compose.waitForIdle()
+        org.junit.Assert.assertEquals(listOf("groceries/used/2"), sent)
+        compose.onNodeWithText("Mushrooms").assertDoesNotExist()
+        compose.onRoot().captureRoboImage("build/screenshots/table-actions-tapped.png")
+    }
+
     @Test @Robo(qualifiers = "w411dp-h891dp-port-xxhdpi")
     fun notSetUp() = shot("not-set-up", s = state(Config()).copy(conn = ConnState.NotConfigured, snapshots = emptyList()))
 

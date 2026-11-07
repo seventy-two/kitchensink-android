@@ -68,7 +68,7 @@ fun BlockView(monitor: String, b: Block) {
         if (b.title.isNotEmpty()) Text(b.title, style = mt.caption, color = p.blockTitle)
         when (b.type) {
             "stats" -> StatsBlock(b.stats)
-            "table" -> TableBlock(b)
+            "table" -> TableBlock(monitor, b)
             "list" -> ListBlock(b)
             "checklist" -> ChecklistBlock(monitor, b)
             else -> if (b.text.isNotEmpty()) Text(b.text, style = mt.body, color = p.text)
@@ -151,10 +151,11 @@ private fun textAlign(a: Align) = when (a) {
 /**
  * A table. The column marked fill takes the spare width, or failing that
  * the left-aligned column with the most text; the rest fit their contents.
- * Too wide for the space, it scrolls sideways.
+ * Too wide for the space, it scrolls sideways. A cell with an action is a
+ * cross button; tapped, its row hides until the next snapshot.
  */
 @Composable
-private fun TableBlock(b: Block) {
+private fun TableBlock(monitor: String, b: Block) {
     val cols = b.columns.size
     if (cols == 0) return
     val p = LocalPalette.current
@@ -174,11 +175,15 @@ private fun TableBlock(b: Block) {
     }
     val headers = b.columns.any { it.title.isNotEmpty() }
     fun textW(s: String, style: TextStyle) = if (s.isEmpty()) 0 else measurer.measure(s, style, softWrap = false, maxLines = 1).size.width
+    val buttonPx = with(density) { TableButton.roundToPx() }
+    // Rows whose button was tapped, hidden until the server sends the table again.
+    var sent by remember(b) { mutableStateOf(emptySet<Int>()) }
     val widths = remember(b, mt) {
         IntArray(cols) { c ->
             var w = textW(b.columns[c].title, mt.caption)
             for (r in b.rows) {
                 val cell = r.getOrNull(c) ?: continue
+                if (cell.action != null) w = maxOf(w, buttonPx)
                 w = maxOf(w, textW(cell.text, mt.body))
                 if (cell.detail.isNotEmpty() && (b.columns[c].align != Align.Left || c != stretch)) {
                     w = maxOf(w, cell.detail.split('\n').maxOf { textW(it, mt.caption) })
@@ -219,10 +224,20 @@ private fun TableBlock(b: Block) {
             if (headers) row(Color.Transparent) { c ->
                 Text(b.columns[c].title, style = mt.caption, color = p.muted, textAlign = textAlign(b.columns[c].align), modifier = Modifier.fillMaxWidth(), maxLines = 1)
             }
-            for ((i, r) in b.rows.withIndex()) {
-                row(if (i % 2 == 1) p.rowAlt else Color.Transparent) { c ->
+            for ((n, ir) in b.rows.withIndex().filter { it.index !in sent }.withIndex()) {
+                val (i, r) = ir
+                row(if (n % 2 == 1) p.rowAlt else Color.Transparent) { c ->
                     val cell = r.getOrNull(c) ?: return@row
                     val align = textAlign(b.columns[c].align)
+                    cell.action?.let { a ->
+                        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+                            IconButtonSmall(Icons.Filled.Close, a.label.ifEmpty { "Remove" }, size = TableButton, iconSize = 16.dp) {
+                                actions.send(monitor, a.type, a.id, "")
+                                sent = sent + i
+                            }
+                        }
+                        return@row
+                    }
                     Column(Modifier.fillMaxWidth()) {
                         val link = cell.url.isNotEmpty()
                         Text(
@@ -239,6 +254,9 @@ private fun TableBlock(b: Block) {
         }
     }
 }
+
+/** The size of a table cell's button. */
+private val TableButton = 32.dp
 
 @Composable
 private fun ListBlock(b: Block) {
