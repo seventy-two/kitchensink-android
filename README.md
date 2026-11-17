@@ -80,6 +80,16 @@ for all three.
   it's live while the background connection is on; otherwise it shows the
   last it heard, with how long ago. It leaves out private figures while
   they're hidden in the app. Tapping it opens the app.
+- **Lights widget** ("kitchensink lights" in the widget picker): just the
+  lights, as the app's lights card has them: one group a line, a room's own
+  light at the head of its numbered ones (Hallway | 1 | 2), with bulbs lit
+  in each light's colour (a warm white without one). The room's button
+  takes the spare width and its numbered lights are narrow. Tap a light to
+  switch it: it shows at once and the monitor is sent the same toggle the
+  app sends, with the server's next update putting it right if it didn't
+  take. The lines share the widget's height, from a comfortable tap on a
+  phone to big buttons on a tablet, scrolling past that. It follows the
+  app's theme and is redrawn whenever the dashboard changes.
 - Checklists (the `todo` monitor) can be ticked, added to and deleted from;
   a tick shows at once, ahead of the server's update.
 - Table cells with an `action` (Food's used-up cross, Big box's ignore,
@@ -155,7 +165,7 @@ Android won't install an update over the last.
 The tests cover the model, layout decisions, chips, the widget's data, the
 SSE parser and the stream client (against a mock server). Screenshot tests
 draw the dashboard from a made-up sample with Robolectric at phone, tablet
-and TV sizes, and the widget at a few home screen sizes; to
+and TV sizes, and both widgets at a few home screen sizes and themes; to
 look at them:
 
 ```sh
@@ -175,6 +185,8 @@ look at them:
 | `data/Config.kt` | settings and the encrypted token |
 | `notify/Notifier.kt`, `service/LiveService.kt` | notifications, and staying connected in the background |
 | `widget/WidgetData.kt`, `widget/DashboardWidget.kt` | what the home screen widget shows, saved for it, and the widget itself (Glance) |
+| `widget/LightsData.kt`, `widget/LightsWidget.kt` | the lights widget's data, the widget, and its tap that switches a light |
+| `widget/WidgetDraw.kt` | the widgets' price lines and bars, as bitmaps to tint |
 | `ui/` | the screens: panels, blocks, summaries, Recent, settings |
 | `draw/` | the weather icons and the cat, drawn from shapes |
 

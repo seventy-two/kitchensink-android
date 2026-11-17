@@ -41,10 +41,18 @@ class WidgetScreenshotTest {
     private val configured = Config(url = "https://example.com/kitchensink", token = "x")
 
     private fun shot(name: String, config: Config = configured, w: Int = 380, h: Int = 420) {
-        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
         val data = widgetData(snapshots, config)
+        render("widget-$name", w, h) { WidgetContent(data, now, scroll = false) }
+    }
+
+    private fun lights(name: String, config: Config = configured, w: Int = 300, h: Int = 220, data: LightsData = lightsData(snapshots, config)) =
+        render("widget-lights-$name", w, h) { LightsContent(data, scroll = false) }
+
+    /** Draws a widget [w] by [h] dp through the RemoteViews a launcher would get, into build/screenshots/[name].png. */
+    private fun render(name: String, w: Int, h: Int, content: @androidx.compose.runtime.Composable () -> Unit) {
+        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
         val size = DpSize(w.dp, h.dp)
-        val views = runBlocking { GlanceRemoteViews().compose(context, size) { WidgetContent(data, now, scroll = false) } }.remoteViews
+        val views = runBlocking { GlanceRemoteViews().compose(context, size) { content() } }.remoteViews
         val parent = FrameLayout(context)
         val view = views.apply(context, parent)
         val px = context.resources.displayMetrics.density
@@ -55,7 +63,7 @@ class WidgetScreenshotTest {
         // A wallpaper-ish grey behind, so the corners show.
         Canvas(bitmap).apply { drawColor(Color.rgb(90, 96, 110)); parent.draw(this) }
         File("build/screenshots").mkdirs()
-        File("build/screenshots/widget-$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        File("build/screenshots/$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
 
     @Test @Robo(qualifiers = "+night")
@@ -78,6 +86,29 @@ class WidgetScreenshotTest {
     // A big widget on the comics tablet's home screen.
     @Test @Robo(qualifiers = "w800dp-h1280dp-port-night-xhdpi")
     fun tablet() = shot("tablet", w = 560, h = 640)
+
+    @Test @Robo(qualifiers = "+night")
+    fun lightsDark() = lights("dark")
+
+    @Test @Robo(qualifiers = "+notnight")
+    fun lightsLight() = lights("light")
+
+    @Test
+    fun lightsRetro() = lights("retro", configured.copy(theme = ThemeChoice.Retro))
+
+    @Test
+    fun lightsBlack() = lights("black", configured.copy(oled = io.github.seventytwo.kitchensink.data.OledCare(black = true)))
+
+    // Narrow, tapped: Study switched off at once.
+    @Test @Robo(qualifiers = "+night")
+    fun lightsNarrowTapped() = lights("narrow-tapped", w = 180, h = 200, data = lightsData(snapshots, configured).toggled("light.study"))
+
+    // Big, on the comics tablet's home screen.
+    @Test @Robo(qualifiers = "w800dp-h1280dp-port-night-xhdpi")
+    fun lightsTablet() = lights("tablet", w = 520, h = 340)
+
+    @Test
+    fun lightsNotSetUp() = lights("not-set-up", Config(), h = 120)
 
     @Test
     fun notSetUp() = shot("not-set-up", Config(), h = 160)

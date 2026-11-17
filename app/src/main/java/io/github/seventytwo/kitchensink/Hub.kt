@@ -18,7 +18,9 @@ import io.github.seventytwo.kitchensink.net.Inbound
 import io.github.seventytwo.kitchensink.net.StreamClient
 import io.github.seventytwo.kitchensink.notify.Notifier
 import io.github.seventytwo.kitchensink.service.LiveService
+import io.github.seventytwo.kitchensink.widget.LightsStore
 import io.github.seventytwo.kitchensink.widget.WidgetStore
+import io.github.seventytwo.kitchensink.widget.lightsData
 import io.github.seventytwo.kitchensink.widget.widgetData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -187,6 +189,7 @@ class Hub(private val context: Context, private val store: ConfigStore, http: Ok
             val c = _config.value
             if (c.configured && _snapshots.value.isEmpty()) return@launch
             WidgetStore.show(context, widgetData(_snapshots.value, c))
+            LightsStore.show(context, lightsData(_snapshots.value, c))
         }
     }
 
