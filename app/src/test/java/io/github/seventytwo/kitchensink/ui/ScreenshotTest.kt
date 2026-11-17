@@ -102,6 +102,22 @@ class ScreenshotTest {
         ),
     )
 
+    // Dimmed now by the moon in the header, which stays tappable through the dimming.
+    @Test @Robo(qualifiers = "w411dp-h891dp-port-xxhdpi")
+    fun phoneDimmed() {
+        var tapped = false
+        val cb = object : ScreenCallbacks by ScreenCallbacks.None {
+            override fun toggleDim() {
+                tapped = true
+            }
+        }
+        compose.setContent { Themed { DashboardScreen(state(configured.copy(forceDim = true)), cb) } }
+        compose.waitForIdle()
+        compose.onRoot().captureRoboImage("build/screenshots/phone-dimmed.png")
+        compose.onAllNodesWithContentDescription("Dimmed: tap to brighten")[0].performClick()
+        org.junit.Assert.assertTrue(tapped)
+    }
+
     @Test @Robo(qualifiers = "w891dp-h411dp-land-xxhdpi")
     fun phoneLandscape() = shot("phone-landscape", s = state(configured.copy(cat = true)))
 

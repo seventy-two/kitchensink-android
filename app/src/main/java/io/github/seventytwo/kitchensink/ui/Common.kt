@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.Dp
@@ -158,6 +159,18 @@ val EyeOffIcon: ImageVector by lazy {
             close()
             moveTo(4f, 4f)
             lineTo(20f, 20f)
+        }
+    }.build()
+}
+
+/** A crescent moon, for dimming the screen now. */
+val MoonIcon: ImageVector by lazy {
+    ImageVector.Builder("Moon", 24.dp, 24.dp, 24f, 24f).apply {
+        path(stroke = SolidColor(Color.Black), strokeLineWidth = 1.8f, strokeLineJoin = StrokeJoin.Round) {
+            moveTo(15f, 3.5f)
+            arcTo(9f, 9f, 0f, isMoreThanHalf = true, isPositiveArc = false, x1 = 15f, y1 = 20.5f)
+            arcTo(11f, 11f, 0f, isMoreThanHalf = false, isPositiveArc = true, x1 = 15f, y1 = 3.5f)
+            close()
         }
     }.build()
 }

@@ -67,6 +67,8 @@ data class Config(
     val theme: ThemeChoice = ThemeChoice.System,
     /** Panels with something new rise to the top; ones with nothing new for a long while sink, fade and don't open by themselves. */
     val relevance: Boolean = true,
+    /** Dims the screen whatever happens, until switched off (the moon in the header). */
+    val forceDim: Boolean = false,
 ) {
     val cleared: Cleared get() = Cleared(clearedThrough, clearedIds.toSet())
     fun withCleared(c: Cleared) = copy(clearedThrough = c.through, clearedIds = c.ids.sorted())

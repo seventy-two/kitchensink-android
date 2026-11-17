@@ -212,6 +212,7 @@ class MainActivity : ComponentActivity() {
                 override fun clear(id: Long) = hub.clearEvent(id)
                 override fun clearAll() = hub.clearAll()
                 override fun togglePrivate() = hub.update { it.copy(hidePrivate = !it.hidePrivate) }
+                override fun toggleDim() = hub.update { it.copy(forceDim = !it.forceDim) }
                 override fun openSettings() {
                     settingsOpen = true
                 }

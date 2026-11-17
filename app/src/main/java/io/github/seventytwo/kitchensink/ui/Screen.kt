@@ -93,6 +93,7 @@ interface ScreenCallbacks {
     fun clear(id: Long)
     fun clearAll()
     fun togglePrivate()
+    fun toggleDim()
     fun openSettings()
     fun titleOf(monitor: String): String
 
@@ -101,6 +102,7 @@ interface ScreenCallbacks {
         override fun clear(id: Long) {}
         override fun clearAll() {}
         override fun togglePrivate() {}
+        override fun toggleDim() {}
         override fun openSettings() {}
         override fun titleOf(monitor: String) = monitor
     }
@@ -148,8 +150,9 @@ fun DashboardScreen(state: ScreenState, cb: ScreenCallbacks) {
             }
         }
         // OLED care dims everything when there's been no touch or key press
-        // for a while; it's back as soon as there is.
-        if (c.oled.dim && oledDim(state.now, state.lastActivity, state.wakeUntil)) {
+        // for a while; it's back as soon as there is. The moon dims it until
+        // tapped again: the dimming doesn't take touches, so it can be.
+        if (c.forceDim || (c.oled.dim && oledDim(state.now, state.lastActivity, state.wakeUntil))) {
             Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.6f)))
         }
     }
@@ -215,6 +218,10 @@ private fun Header(state: ScreenState, cb: ScreenCallbacks, side: Dp) {
                 size = 40.dp, iconSize = 20.dp, tint = if (hidden) p.muted else p.text, onClick = cb::togglePrivate,
             )
         }
+        IconButtonSmall(
+            MoonIcon, if (state.config.forceDim) "Dimmed: tap to brighten" else "Dim now",
+            size = 40.dp, iconSize = 18.dp, tint = if (state.config.forceDim) p.text else p.muted, onClick = cb::toggleDim,
+        )
         IconButtonSmall(Icons.Filled.Settings, "Settings", size = 40.dp, iconSize = 20.dp, tint = p.text, onClick = cb::openSettings)
     }
 }

@@ -95,6 +95,8 @@ for all three.
   idle (after ten minutes without a touch or key press), swap sides, and a
   black cat asleep above Recent, who wakes now and then to wash, scratch,
   slow-blink at you, pounce, drink from a bowl of milk or hunt a toy mouse.
+- The moon in the header dims the screen at once, whatever happens, until
+  it's tapped again (remembered), as on Windows.
 - **Retro** theme, as on Windows: after the Weather Channel's 90s
   WeatherStar screens, with a blue sky fading to purple, bevelled panels,
   bold shadowed lettering, yellow headings, an amber rule under the title
