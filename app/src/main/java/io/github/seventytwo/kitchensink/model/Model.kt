@@ -18,6 +18,21 @@ enum class Tone { None, Good, Bad, Warn, Muted, Accent }
 enum class Align { Left, Right, Center }
 enum class Priority { Low, Normal, High }
 
+/**
+ * A chip's small price line: [points] evenly spaced, then [ext] carrying on
+ * dotted after a tick (pre-market or after hours). [base], when set, is a
+ * level drawn faintly (the previous close); [faded] dims the points, whose
+ * session is over.
+ */
+data class Spark(
+    val points: List<Float> = emptyList(),
+    val ext: List<Float> = emptyList(),
+    val base: Float? = null,
+    val tone: Tone = Tone.None,
+    val extTone: Tone = Tone.None,
+    val faded: Boolean = false,
+)
+
 data class Stat(
     val label: String = "",
     val value: String = "",
@@ -32,7 +47,18 @@ data class Stat(
     val icon: String = "",
     /** 0 to 1, a faint chart behind a chip, e.g. the chance of rain; null draws nothing. */
     val level: Float? = null,
-)
+    /** In chips: sets the chip apart from the ones after it, as plain text on one line (the portfolio's day). */
+    val lead: Boolean = false,
+    /** Opened when the stat is tapped. */
+    val url: String = "",
+    /** A word drawn small after the value, e.g. "pre". */
+    val tag: String = "",
+    /** A price line drawn in a chip, when it has two points or more. */
+    val spark: Spark? = null,
+) {
+    /** Whether [spark] has enough to draw a line. */
+    val hasSpark: Boolean get() = spark != null && spark.points.isNotEmpty() && spark.points.size + spark.ext.size >= 2
+}
 
 data class Column(val title: String = "", val align: Align = Align.Left, val fill: Boolean = false)
 
@@ -155,7 +181,10 @@ private fun JsonElement?.obj(): JsonObject = this as? JsonObject ?: JsonObject(e
 private fun JsonObject.str(key: String): String = (this[key] as? JsonPrimitive)?.takeIf { it.isString }?.content ?: ""
 private fun JsonObject.flag(key: String): Boolean = (this[key] as? JsonPrimitive)?.booleanOrNull ?: false
 private fun JsonObject.array(key: String): List<JsonElement> = this[key] as? JsonArray ?: emptyList()
-private fun JsonObject.tone(): Tone = when (str("tone")) {
+private fun JsonObject.tone(): Tone = toneNamed(str("tone"))
+private fun JsonObject.floats(key: String): List<Float> =
+    array(key).mapNotNull { (it as? JsonPrimitive)?.takeIf { p -> !p.isString }?.floatOrNull }
+private fun toneNamed(t: String): Tone = when (t) {
     "good" -> Tone.Good
     "bad" -> Tone.Bad
     "warn" -> Tone.Warn
@@ -171,11 +200,21 @@ private fun parseStat(e: JsonElement): Stat {
         value = j.str("value"),
         detail = j.str("detail"),
         tone = j.tone(),
-        series = j.array("series").mapNotNull { (it as? JsonPrimitive)?.takeIf { p -> !p.isString }?.floatOrNull },
+        series = j.floats("series"),
         top = (j["top"] as? JsonPrimitive)?.floatOrNull ?: 0f,
         isPrivate = j.flag("private"),
         icon = j.str("icon"),
         level = (j["level"] as? JsonPrimitive)?.takeIf { !it.isString }?.floatOrNull?.coerceIn(0f, 1f),
+        lead = j.flag("lead"),
+        url = j.str("url"),
+        tag = j.str("tag"),
+        spark = (j["spark"] as? JsonObject)?.let { sp ->
+            Spark(
+                sp.floats("points"), sp.floats("ext"),
+                (sp["base"] as? JsonPrimitive)?.takeIf { !it.isString }?.floatOrNull,
+                toneNamed(sp.str("tone")), toneNamed(sp.str("extTone")), sp.flag("faded"),
+            )
+        },
     )
 }
 

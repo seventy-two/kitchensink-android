@@ -187,5 +187,25 @@ class ModelTest {
         assertEquals(null, switchesPanel(listOf(todo)))
         assertEquals(null, switchesPanel(listOf(lights.copy(background = true))))
     }
-}
 
+    @Test
+    fun parsesChipsExtras() {
+        val s = parseSnapshot(
+            """{"monitor":"stocks","summary":[
+              {"label":"Today","value":"+£10","lead":true,"url":"https://example.com"},
+              {"label":"NVDA","value":"-3.50%","tone":"bad","tag":"pre","spark":{"points":[1,2,3],"ext":[2.5],"base":1.5,"tone":"good","extTone":"bad","faded":true}},
+              {"label":"BP.","value":"+1%","spark":{"points":[1]}},
+              {"label":"MU","value":"+1%"}]}""",
+        )
+        assertTrue(s.summary[0].lead)
+        assertEquals("https://example.com", s.summary[0].url)
+        val n = s.summary[1]
+        assertFalse(n.lead)
+        assertEquals("pre", n.tag)
+        assertTrue(n.hasSpark)
+        assertEquals(Spark(listOf(1f, 2f, 3f), listOf(2.5f), 1.5f, Tone.Good, Tone.Bad, true), n.spark)
+        assertFalse(s.summary[2].hasSpark) // one point isn't a line
+        assertFalse(s.summary[3].hasSpark)
+        assertNull(s.summary[3].spark)
+    }
+}

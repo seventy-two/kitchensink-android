@@ -1708,27 +1708,87 @@
      "label": "Today",
      "value": "−£123",
      "tone": "bad",
-     "private": true
+     "private": true,
+     "lead": true
     },
     {
      "label": "ACME",
      "value": "-1.6%",
-     "tone": "bad"
+     "tone": "bad",
+     "spark": {
+      "points": [
+       226.1,
+       227.4,
+       225.9,
+       224.8,
+       225.3,
+       223.9,
+       224.6,
+       222.5
+      ],
+      "base": 226.5,
+      "tone": "bad"
+     }
     },
     {
      "label": "GLOBEX",
      "value": "+0.4%",
-     "tone": "good"
+     "tone": "good",
+     "spark": {
+      "points": [
+       580.2,
+       579.1,
+       581.5,
+       582.0,
+       581.2,
+       582.6,
+       583.4
+      ],
+      "base": 581.1,
+      "tone": "good"
+     }
     },
     {
      "label": "INITECH",
-     "value": "-0.4%",
-     "tone": "bad"
+     "value": "+0.3%",
+     "tone": "good",
+     "tag": "post",
+     "spark": {
+      "points": [
+       41.2,
+       41.0,
+       40.8,
+       41.1,
+       40.9,
+       41.04
+      ],
+      "ext": [
+       41.1,
+       41.2,
+       41.17
+      ],
+      "base": 41.2,
+      "tone": "bad",
+      "extTone": "good",
+      "faded": true
+     }
     },
     {
      "label": "FTSE",
      "value": "+0.1%",
-     "tone": "good"
+     "tone": "good",
+     "spark": {
+      "points": [
+       8301,
+       8310,
+       8295,
+       8312,
+       8320,
+       8309
+      ],
+      "base": 8302,
+      "tone": "good"
+     }
     }
    ]
   },

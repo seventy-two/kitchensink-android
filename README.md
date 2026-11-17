@@ -6,9 +6,13 @@ notification for each new event. It's Kotlin and Jetpack Compose, one APK
 for all three.
 
 - Draws whatever blocks a monitor sends (stats, tables, lists, checklists,
-  text) and its summary (tiles, or chips tinted by tone, with the
-  forecast's weather icons and chance-of-rain chart), so new monitors
-  appear without client changes. The drawing follows the Windows client's.
+  text) and its summary (tiles, or chips underlined in their tone's
+  colour, with the forecast's weather icons and chance-of-rain chart; a
+  `lead` chip as plain text on one line; chips that send a `spark` (the
+  watchlist) as plain blocks with a price line under them, dotted on
+  through pre-market or after-hours trading, any `tag` small after the
+  value), so new monitors appear without client changes. A chip with a
+  `url` opens it when tapped. The drawing follows the Windows client's.
 - **Compact layout** (phones, tablets on their side, TVs): each monitor is
   one row of its summary, and full panels open beneath their rows, in panel
   order, as long as they fit the screen whole; one that doesn't stays a row.
