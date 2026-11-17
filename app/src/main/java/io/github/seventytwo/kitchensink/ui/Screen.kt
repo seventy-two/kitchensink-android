@@ -43,6 +43,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.seventytwo.kitchensink.data.Config
+import io.github.seventytwo.kitchensink.data.LayoutChoice
 import io.github.seventytwo.kitchensink.model.Event
 import io.github.seventytwo.kitchensink.model.News
 import io.github.seventytwo.kitchensink.model.Tier
@@ -90,6 +91,8 @@ data class ScreenState(
 /** What the dashboard can ask of the app, besides [Actions]. */
 interface ScreenCallbacks {
     fun pin(monitor: String, pin: Pin)
+    /** Sets a panel's closed row to one slim line, or not. */
+    fun rowStyle(monitor: String, slim: Boolean)
     fun clear(id: Long)
     fun clearAll()
     fun togglePrivate()
@@ -99,6 +102,7 @@ interface ScreenCallbacks {
 
     object None : ScreenCallbacks {
         override fun pin(monitor: String, pin: Pin) {}
+        override fun rowStyle(monitor: String, slim: Boolean) {}
         override fun clear(id: Long) {}
         override fun clearAll() {}
         override fun togglePrivate() {}
@@ -140,7 +144,8 @@ fun DashboardScreen(state: ScreenState, cb: ScreenCallbacks) {
         val (dx, dy) = if (c.oled.shift) oledShift(state.now, 6f) else 0f to 0f
         val over = if (state.overscan) Modifier.padding(horizontal = 40.dp, vertical = 20.dp) else Modifier
         var compact by remember { mutableStateOf(true) }
-        compact = useCompact(compact, maxWidth.value, maxHeight.value)
+        // Ultra compact is the compact layout at any size.
+        compact = c.layout == LayoutChoice.Ultra || useCompact(compact, maxWidth.value, maxHeight.value)
         val metrics = Metrics.of(compact, retro = p.retro)
         val side = if (state.overscan) 0.dp else 10.dp
         KitchensinkTheme(p, metrics) {
@@ -271,7 +276,7 @@ private fun Body(state: ScreenState, cb: ScreenCallbacks, compact: Boolean) {
             val rest = if (lights == null) panels else panels.filter { it.monitor != lights.monitor }
             Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(gap)) {
                 if (feedFirst) FeedColumn(state, cb, Modifier.width(feedW), lights = lights)
-                PanelsColumn(rest, pins, stale, compact, height, cb, Modifier.weight(1f))
+                PanelsColumn(rest, pins, stale, c, compact, height, cb, Modifier.weight(1f))
                 if (!feedFirst) FeedColumn(state, cb, Modifier.width(feedW), lights = lights)
             }
         } else {
@@ -291,12 +296,21 @@ private fun FeedColumn(state: ScreenState, cb: ScreenCallbacks, modifier: Modifi
 
 @Composable
 private fun PanelsColumn(
-    panels: List<Snapshot>, pins: Map<String, Pin>, stale: Set<String>, compact: Boolean, height: Dp, cb: ScreenCallbacks, modifier: Modifier,
+    panels: List<Snapshot>, pins: Map<String, Pin>, stale: Set<String>, c: Config, compact: Boolean, height: Dp, cb: ScreenCallbacks, modifier: Modifier,
 ) {
     val scroll = rememberScrollState()
     Box(modifier.verticalScroll(scroll)) {
-        if (compact) CompactPanels(panels, pins, stale, height, cb::pin, Modifier.fillMaxWidth())
-        else MasonryPanels(panels, stale, Modifier.fillMaxWidth())
+        if (compact) {
+            // Ultra compact sets the rows closer together too.
+            val gap = if (c.layout == LayoutChoice.Ultra) 3.dp else LocalMetrics.current.gap
+            CompactPanels(panels, pins, stale, height, cb::pin, Modifier.fillMaxWidth(), c::slimRow, cb::rowStyle, gap)
+        } else {
+            MasonryPanels(
+                panels, stale, Modifier.fillMaxWidth(), c.collapsed,
+                onCollapse = { m, fold -> cb.pin(m, if (fold) Pin.Closed else Pin.Auto) },
+                slim = c::slimRow, onStyle = cb::rowStyle,
+            )
+        }
     }
 }
 
@@ -332,7 +346,7 @@ private fun Pages(
         }
         Spacer(Modifier.height(6.dp))
         HorizontalPager(pager, Modifier.weight(1f).fillMaxWidth(), pageSpacing = 16.dp, beyondViewportPageCount = 1) { page ->
-            if (page == 0) PanelsColumn(panels, pins, stale, compact, height - tabH - 6.dp, cb, Modifier.fillMaxSize())
+            if (page == 0) PanelsColumn(panels, pins, stale, state.config, compact, height - tabH - 6.dp, cb, Modifier.fillMaxSize())
             else FeedColumn(state, cb, Modifier.fillMaxSize(), heading = false)
         }
     }

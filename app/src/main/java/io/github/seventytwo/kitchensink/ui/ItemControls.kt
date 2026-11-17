@@ -154,7 +154,7 @@ private fun ChecklistButton(monitor: String, b: Block, it: Item, index: Int, cou
         modifier.clip(shape).background(p.frame)
             .tappable(shape = shape) { if (b.switches) open = true else actions.toggle(monitor, it.id, !done) }
             .semantics(mergeDescendants = true) { contentDescription = it.title }
-            .padding(horizontal = 10.dp, vertical = 6.dp),
+            .padding(horizontal = 10.dp, vertical = if (LocalSlim.current) 2.dp else 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (b.switches) {

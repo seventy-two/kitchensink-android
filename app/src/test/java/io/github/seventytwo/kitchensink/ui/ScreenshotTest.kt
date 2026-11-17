@@ -7,6 +7,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.swipeLeft
 import com.github.takahirom.roborazzi.captureRoboImage
 import androidx.compose.ui.test.onAllNodesWithContentDescription
@@ -117,6 +118,50 @@ class ScreenshotTest {
         compose.onAllNodesWithContentDescription("Dimmed: tap to brighten")[0].performClick()
         org.junit.Assert.assertTrue(tapped)
     }
+
+    // Ultra compact: every closed panel one slim line, the stocks set back
+    // to compact by hand, and weather open.
+    private val ultra = configured.copy(
+        layout = io.github.seventytwo.kitchensink.data.LayoutChoice.Ultra,
+        rowStyle = mapOf("stocks" to "normal"),
+        expanded = setOf("weather"),
+    )
+
+    @Test @Robo(qualifiers = "w411dp-h891dp-port-xxhdpi")
+    fun phoneUltra() = shot("phone-ultra", s = state(ultra))
+
+    // The comics tablet (Galaxy Tab S5e, 1600x2560 at its usual density).
+    @Test @Robo(qualifiers = "w800dp-h1280dp-port-xhdpi")
+    fun tablet105Ultra() = shot("tablet-10in-ultra", s = state(ultra.copy(cat = true)))
+
+    @Test @Robo(qualifiers = "w800dp-h1280dp-port-xhdpi")
+    fun tablet105() = shot("tablet-10in")
+
+    @Test @Robo(qualifiers = "w960dp-h540dp-land-television-xhdpi")
+    fun tvUltra() = shot("tv-ultra", Palette.Oled, state(ultra.copy(oled = OledCare(black = true)), tv = true))
+
+    // Long-pressing a row offers compact or ultra compact for it alone.
+    @Test @Robo(qualifiers = "w411dp-h891dp-port-xxhdpi")
+    fun rowStyleMenu() {
+        val picked = mutableListOf<Pair<String, Boolean>>()
+        val cb = object : ScreenCallbacks by ScreenCallbacks.None {
+            override fun rowStyle(monitor: String, slim: Boolean) {
+                picked += monitor to slim
+            }
+        }
+        compose.setContent { Themed { DashboardScreen(state(), cb) } }
+        compose.waitForIdle()
+        compose.onAllNodesWithContentDescription("Open")[1].performTouchInput { longClick() }
+        compose.waitForIdle()
+        captureScreenRoboImage("build/screenshots/row-style-menu.png")
+        compose.onNodeWithText("Ultra compact").performClick()
+        compose.waitForIdle()
+        org.junit.Assert.assertEquals(listOf("todo" to true), picked)
+    }
+
+    // The wide layout with two panels folded to their rows by hand.
+    @Test @Robo(qualifiers = "w1024dp-h1366dp-port-xhdpi")
+    fun tabletPortraitCollapsed() = shot("tablet-portrait-collapsed", s = state(configured.copy(collapsed = setOf("calendar", "dailies"))))
 
     @Test @Robo(qualifiers = "w891dp-h411dp-land-xxhdpi")
     fun phoneLandscape() = shot("phone-landscape", s = state(configured.copy(cat = true)))

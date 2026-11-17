@@ -35,6 +35,10 @@ data class OledCare(
 @Serializable
 enum class TvMode { Auto, On, Off }
 
+/** How the panels are laid out: by the screen's size, or ultra compact (every closed panel one slim line) at any size. */
+@Serializable
+enum class LayoutChoice { BySize, Ultra }
+
 @Serializable
 enum class ThemeChoice { System, Light, Dark, Retro }
 
@@ -67,12 +71,22 @@ data class Config(
     val theme: ThemeChoice = ThemeChoice.System,
     /** Panels with something new rise to the top; ones with nothing new for a long while sink, fade and don't open by themselves. */
     val relevance: Boolean = true,
+    val layout: LayoutChoice = LayoutChoice.BySize,
+    /** Panels whose closed row differs from the layout's: "slim" (one slim line) or "normal", by monitor. */
+    val rowStyle: Map<String, String> = emptyMap(),
     /** Dims the screen whatever happens, until switched off (the moon in the header). */
     val forceDim: Boolean = false,
 ) {
     val cleared: Cleared get() = Cleared(clearedThrough, clearedIds.toSet())
     fun withCleared(c: Cleared) = copy(clearedThrough = c.through, clearedIds = c.ids.sorted())
     val configured: Boolean get() = url.isNotBlank() && token.isNotBlank()
+
+    /** Whether a panel's closed row is one slim line: its own choice, else the layout's. */
+    fun slimRow(monitor: String): Boolean = rowStyle[monitor]?.let { it == "slim" } ?: (layout == LayoutChoice.Ultra)
+
+    /** This with a panel's closed row chosen; a choice that matches the layout's is forgotten, so it follows the layout again. */
+    fun withRowStyle(monitor: String, slim: Boolean): Config =
+        copy(rowStyle = if (slim == (layout == LayoutChoice.Ultra)) rowStyle - monitor else rowStyle + (monitor to if (slim) "slim" else "normal"))
 }
 
 /** Reads and writes [Config]. */

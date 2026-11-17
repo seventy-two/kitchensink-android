@@ -27,7 +27,19 @@ for all three.
   An open panel is always its full size, never cut short to fit: tap a row
   to open or close it yourself, and the column scrolls if it runs past the
   screen. Tall, wide screens (from about 840 x 900 dp)
-  show every full panel in columns instead.
+  show every full panel in columns instead; there, a panel's chevron folds
+  it to its summary row (tap the row to open it again), remembered and
+  carried over to the compact layout.
+- **Ultra compact** (settings → Layout): the compact layout at any screen
+  size, the rows closer together, with every closed panel cut to one slim
+  line: summaries as label and value pairs (chips underlined in their
+  tone's colour, a small price line after the value when they have one),
+  what doesn't fit counted as "+n", no subtitles, a short table's first row
+  only, without headings or details, and smaller buttons. An open panel is
+  always the full one, headings and all. Long-press a panel's row (or an
+  open panel's chevron) to choose Compact or Ultra compact for that panel
+  alone. A stat's `brief`, when the server sends one, replaces its value
+  on these lines (Food names the day only up to tomorrow).
 - **Order by what's new** (settings, on by default): a panel the server
   says matters now (a game on, an appointment soon) or that had an event
   in the last two hours rises to the top; one with neither an event nor a

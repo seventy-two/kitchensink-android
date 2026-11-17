@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.layout.Box
@@ -67,6 +68,9 @@ data class PanelState(
 val LocalActions = staticCompositionLocalOf<Actions> { Actions.None }
 val LocalPanelState = staticCompositionLocalOf { PanelState() }
 
+/** Whether a block is being drawn on a slim line (the ultra compact layout): no table headings or cell details, smaller buttons. */
+val LocalSlim = staticCompositionLocalOf { false }
+
 /** Whether the UI is driven by a remote's D-pad, so focus needs to show clearly. */
 val LocalTv = staticCompositionLocalOf { false }
 
@@ -82,16 +86,19 @@ fun openUrl(context: Context, url: String) {
 
 /**
  * Makes something tappable, and focusable from a remote, with an accent
- * outline while it has focus.
+ * outline while it has focus. [onLongClick], if given, takes a long press.
  */
 @Composable
-fun Modifier.tappable(enabled: Boolean = true, shape: Shape = RectangleShape, onClick: () -> Unit): Modifier {
+fun Modifier.tappable(enabled: Boolean = true, shape: Shape = RectangleShape, onLongClick: (() -> Unit)? = null, onClick: () -> Unit): Modifier {
     val source = remember { MutableInteractionSource() }
     val focused by source.collectIsFocusedAsState()
     val p = LocalPalette.current
     return this
         .then(if (focused) Modifier.border(2.dp, p.accent, shape) else Modifier)
-        .clickable(source, ripple(), enabled = enabled, onClick = onClick)
+        .then(
+            if (onLongClick == null) Modifier.clickable(source, ripple(), enabled = enabled, onClick = onClick)
+            else Modifier.combinedClickable(source, ripple(), enabled = enabled, onLongClick = onLongClick, onClick = onClick),
+        )
 }
 
 /** Raises a panel in the retro theme: lit along its top and left, shaded along its bottom and right. */

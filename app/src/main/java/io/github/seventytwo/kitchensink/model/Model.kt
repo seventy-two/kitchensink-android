@@ -57,6 +57,8 @@ data class Stat(
     val spark: Spark? = null,
     /** Drawn as a bar filled to [level], e.g. how much of a limit is used. */
     val bar: Boolean = false,
+    /** Replaces the value on a slim line (the ultra compact layout) when set; empty leaves only the label. */
+    val brief: String? = null,
 ) {
     /** Whether [spark] has enough to draw a line. */
     val hasSpark: Boolean get() = spark != null && spark.points.isNotEmpty() && spark.points.size + spark.ext.size >= 2
@@ -226,6 +228,7 @@ private fun parseStat(e: JsonElement): Stat {
         level = (j["level"] as? JsonPrimitive)?.takeIf { !it.isString }?.floatOrNull?.coerceIn(0f, 1f),
         lead = j.flag("lead"),
         bar = j.flag("bar"),
+        brief = (j["brief"] as? JsonPrimitive)?.takeIf { it.isString }?.content,
         url = j.str("url"),
         tag = j.str("tag"),
         spark = (j["spark"] as? JsonObject)?.let { sp ->

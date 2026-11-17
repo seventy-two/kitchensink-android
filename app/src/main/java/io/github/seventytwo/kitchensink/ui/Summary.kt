@@ -340,3 +340,121 @@ private fun BarTile(s: Stat, modifier: Modifier) {
         Text(s.value, style = mt.caption, color = p.tone(s.tone), maxLines = 1)
     }
 }
+
+/**
+ * A summary on one slim line, for the ultra compact layout: each stat's
+ * label then its value (its brief, when it has one), without details. As
+ * chips each is underlined in its tone's colour, or a plain block with a
+ * small price line after the value when it has one. What doesn't fit is
+ * cut short, then left out with a count ("+3"). Ones with a link open it
+ * when tapped.
+ */
+@Composable
+fun SlimStats(stats: List<Stat>, asChips: Boolean, modifier: Modifier = Modifier) {
+    val p = LocalPalette.current
+    val mt = LocalMetrics.current
+    val actions = LocalActions.current
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+        val width = constraints.maxWidth.toFloat()
+        fun px(d: Float) = with(density) { d.dp.toPx() }
+        val padX = px(if (asChips) 5f else 0f)
+        val padY = px(2f)
+        val gap = px(if (asChips) 3f else 16f)
+        val inner = px(4f)
+        val tagGap = px(3f)
+        val caption = mt.caption
+        val body = mt.body
+        val tagStyle = caption.copy(fontSize = caption.fontSize * TagScale, lineHeight = caption.lineHeight * TagScale)
+        val lineH = measurer.measure("Ag", body).size.height.toFloat()
+        val h = Math.round(lineH + padY * 2).toFloat()
+
+        /** One stat as laid out: where it is and what's drawn. */
+        class Piece(val s: Stat, val x: Float, val w: Float, val label: TextLayoutResult?, val value: TextLayoutResult?, val tag: TextLayoutResult?, val spark: Boolean, val icon: Boolean)
+        val pieces = mutableListOf<Piece>()
+        var more: TextLayoutResult? = null
+        var moreX = 0f
+        var x = 0f
+        for ((i, st) in stats.withIndex()) {
+            val tone = p.tone(st.tone)
+            val col = coloured(st.tone)
+            // Chips' labels are what they're about (a ticker), so not muted.
+            val label = st.label.takeIf { it.isNotEmpty() }?.let {
+                measurer.measure(it, caption.copy(color = if (asChips && st.tone != Tone.Muted) p.text else p.muted), softWrap = false, maxLines = 1)
+            }
+            val valueColour = if (col || !asChips) tone else if (st.tone == Tone.Muted) p.muted else p.text
+            var text = st.brief ?: st.value
+            var value = text.takeIf { it.isNotEmpty() }?.let { measurer.measure(it, body.copy(color = valueColour), softWrap = false, maxLines = 1) }
+            val icon = isWeatherIcon(st.icon)
+            val spark = asChips && !st.lead && st.hasSpark
+            val tag = st.tag.takeIf { it.isNotEmpty() }?.let { measurer.measure(tagText(it), tagStyle.copy(color = p.muted), softWrap = false, maxLines = 1) }
+            val labelW = label?.size?.width?.toFloat() ?: 0f
+            val between = if (label != null && (value != null || icon)) inner else 0f
+            val extra = (if (icon) lineH + inner else 0f) + (tag?.let { it.size.width + tagGap } ?: 0f) + (if (spark) px(40f) + inner else 0f)
+            fun total() = padX * 2 + labelW + between + (value?.size?.width ?: 0) + extra
+            var w = total()
+            val room = width - x
+            if (w > room) {
+                // Cut the value short if that leaves something to read; else
+                // say how many more there are and stop.
+                val valueRoom = room - (padX * 2 + labelW + between + extra)
+                if (value != null && valueRoom >= px(40f)) {
+                    value = measurer.measure(
+                        text, body.copy(color = valueColour), overflow = TextOverflow.Ellipsis, softWrap = false, maxLines = 1,
+                        constraints = Constraints(maxWidth = valueRoom.toInt()),
+                    )
+                    w = total()
+                } else {
+                    more = measurer.measure("+${stats.size - i}", caption.copy(color = p.muted), softWrap = false, maxLines = 1)
+                    moreX = x
+                    break
+                }
+            }
+            pieces += Piece(st, x, w, label, value, tag, spark, icon)
+            x += w + gap
+        }
+        val icons = p.iconColours()
+        Canvas(Modifier.fillMaxWidth().height(with(density) { h.toDp() })) {
+            val shapes = DrawScopeShapes(this)
+            for (pc in pieces) {
+                val st = pc.s
+                if (asChips && !st.lead) {
+                    if (pc.spark) drawRect(p.frame, Offset(pc.x, 0f), Size(pc.w, h))
+                    else {
+                        val t = 2.dp.roundToPx().toFloat()
+                        drawRect(if (coloured(st.tone)) p.tone(st.tone) else p.border, Offset(pc.x, h - t), Size(pc.w, t))
+                    }
+                }
+                var tx = pc.x + padX
+                // Everything rests on the value's baseline.
+                val base = padY + (pc.value?.firstBaseline ?: measurer.measure("Ag", body).firstBaseline)
+                pc.label?.let {
+                    drawText(it, topLeft = Offset(tx, base - it.firstBaseline))
+                    tx += it.size.width + inner
+                }
+                pc.value?.let {
+                    drawText(it, topLeft = Offset(tx, padY))
+                    tx += it.size.width + if (pc.tag != null) tagGap else inner
+                }
+                pc.tag?.let {
+                    drawText(it, topLeft = Offset(tx, base - it.firstBaseline))
+                    tx += it.size.width + inner
+                }
+                if (pc.spark) {
+                    val sh = Math.round(lineH * 0.7f).toFloat()
+                    drawSpark(st.spark!!, Offset(tx, Math.round((h - sh) / 2).toFloat()), Size(40.dp.toPx(), sh), p)
+                    tx += 40.dp.toPx() + inner
+                }
+                if (pc.icon) drawWeatherIcon(shapes, st.icon, Vec2(tx, padY), lineH, icons)
+            }
+            more?.let { drawText(it, topLeft = Offset(moreX, (h - it.size.height) / 2)) }
+        }
+        for (pc in pieces) {
+            if (pc.s.url.isEmpty()) continue
+            with(density) {
+                Box(Modifier.offset(pc.x.toDp(), 0.dp).size(pc.w.toDp(), h.toDp()).tappable { actions.open(pc.s.url) })
+            }
+        }
+    }
+}

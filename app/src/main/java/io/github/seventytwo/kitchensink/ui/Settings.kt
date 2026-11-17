@@ -38,6 +38,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import io.github.seventytwo.kitchensink.data.Config
+import io.github.seventytwo.kitchensink.data.LayoutChoice
 import io.github.seventytwo.kitchensink.data.OledCare
 import io.github.seventytwo.kitchensink.data.ThemeChoice
 import io.github.seventytwo.kitchensink.data.TvMode
@@ -189,6 +190,11 @@ fun SettingsScreen(
             toggle("Dim when idle", draft.oled.dim, "after ten minutes without a touch or key press") { v -> care { it.copy(dim = v) } }
             toggle("Swap sides", draft.oled.swap, "moves the Recent column across every other hour") { v -> care { it.copy(swap = v) } }
             heading("Layout")
+            choice(
+                listOf(LayoutChoice.BySize to "By screen size", LayoutChoice.Ultra to "Ultra compact (a closed panel is one slim line)"),
+                draft.layout,
+            ) { draft = draft.copy(layout = it) }
+            Text("Long-press a panel's row to choose compact or ultra compact for it alone.", style = mt.caption, color = p.muted)
             toggle(
                 "Order by what's new", draft.relevance,
                 "a panel with something new in the last two hours, or that matters now, rises; one with nothing new for 12 hours sinks and fades",
@@ -207,9 +213,9 @@ fun SettingsScreen(
                         IconButtonSmall(Icons.Filled.KeyboardArrowDown, "Move down", enabled = i < order.size - 1) { draft = draft.copy(order = shift(order, id, 1)) }
                     }
                 }
-                if (draft.expanded.isNotEmpty() || draft.collapsed.isNotEmpty()) {
-                    button("Forget panels opened or closed by hand", false, Modifier.padding(top = 6.dp)) {
-                        draft = draft.copy(expanded = emptySet(), collapsed = emptySet())
+                if (draft.expanded.isNotEmpty() || draft.collapsed.isNotEmpty() || draft.rowStyle.isNotEmpty()) {
+                    button("Forget panels opened, closed or styled by hand", false, Modifier.padding(top = 6.dp)) {
+                        draft = draft.copy(expanded = emptySet(), collapsed = emptySet(), rowStyle = emptyMap())
                     }
                 }
             }

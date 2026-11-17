@@ -209,6 +209,7 @@ class MainActivity : ComponentActivity() {
                         collapsed = if (pin == Pin.Closed) it.collapsed + monitor else it.collapsed - monitor,
                     )
                 }
+                override fun rowStyle(monitor: String, slim: Boolean) = hub.update { it.withRowStyle(monitor, slim) }
                 override fun clear(id: Long) = hub.clearEvent(id)
                 override fun clearAll() = hub.clearAll()
                 override fun togglePrivate() = hub.update { it.copy(hidePrivate = !it.hidePrivate) }

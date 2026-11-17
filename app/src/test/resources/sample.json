@@ -2711,6 +2711,90 @@
    ]
   },
   {
+   "monitor": "groceries",
+   "kind": "groceries",
+   "title": "Food",
+   "updated": "2026-10-12T14:50:00Z",
+   "summaryStyle": "chips",
+   "summary": [
+    {
+     "label": "Spinach",
+     "value": "Today",
+     "tone": "bad"
+    },
+    {
+     "label": "Mushrooms",
+     "value": "Tomorrow",
+     "tone": "warn"
+    },
+    {
+     "label": "Halloumi",
+     "value": "Monday",
+     "brief": ""
+    },
+    {
+     "label": "Yoghurt",
+     "value": "Wednesday",
+     "brief": ""
+    }
+   ],
+   "blocks": [
+    {
+     "type": "table",
+     "columns": [
+      {
+       "title": "Item",
+       "fill": true
+      },
+      {
+       "title": "Use by",
+       "align": "right"
+      }
+     ],
+     "rows": [
+      [
+       {
+        "text": "Spinach",
+        "detail": "fridge"
+       },
+       {
+        "text": "today",
+        "tone": "bad"
+       }
+      ],
+      [
+       {
+        "text": "Mushrooms",
+        "detail": "fridge"
+       },
+       {
+        "text": "tomorrow",
+        "tone": "warn"
+       }
+      ],
+      [
+       {
+        "text": "Halloumi",
+        "detail": "fridge"
+       },
+       {
+        "text": "Mon"
+       }
+      ],
+      [
+       {
+        "text": "Yoghurt",
+        "detail": "fridge"
+       },
+       {
+        "text": "Wed"
+       }
+      ]
+     ]
+    }
+   ]
+  },
+  {
    "monitor": "autotrader",
    "kind": "autotrader",
    "title": "AutoTrader",

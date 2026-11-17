@@ -247,7 +247,10 @@ private fun TableBlock(monitor: String, b: Block) {
             if (total > most) { stretch = c; most = total }
         }
     }
-    val headers = b.columns.any { it.title.isNotEmpty() }
+    // A slim line has only the first row, without headings or details.
+    val slim = LocalSlim.current
+    val headers = !slim && b.columns.any { it.title.isNotEmpty() }
+    val shownRows = if (slim) b.rows.take(1) else b.rows
     fun textW(s: String, style: TextStyle) = if (s.isEmpty()) 0 else measurer.measure(s, style, softWrap = false, maxLines = 1).size.width
     val buttonPx = with(density) { TableButton.roundToPx() }
     // Rows whose button was tapped, hidden until the server sends the table again.
@@ -298,7 +301,7 @@ private fun TableBlock(monitor: String, b: Block) {
             if (headers) row(Color.Transparent) { c ->
                 Text(b.columns[c].title, style = mt.caption, color = p.muted, textAlign = textAlign(b.columns[c].align), modifier = Modifier.fillMaxWidth(), maxLines = 1)
             }
-            for ((n, ir) in b.rows.withIndex().filter { it.index !in sent }.withIndex()) {
+            for ((n, ir) in shownRows.withIndex().filter { it.index !in sent }.withIndex()) {
                 val (i, r) = ir
                 row(if (n % 2 == 1) p.rowAlt else Color.Transparent) { c ->
                     val cell = r.getOrNull(c) ?: return@row
@@ -321,7 +324,7 @@ private fun TableBlock(monitor: String, b: Block) {
                             textAlign = align,
                             modifier = Modifier.fillMaxWidth().then(if (link) Modifier.tappable { actions.open(cell.url) } else Modifier),
                         )
-                        if (cell.detail.isNotEmpty()) Text(cell.detail, style = mt.caption, color = p.muted, textAlign = align, modifier = Modifier.fillMaxWidth())
+                        if (cell.detail.isNotEmpty() && !slim) Text(cell.detail, style = mt.caption, color = p.muted, textAlign = align, modifier = Modifier.fillMaxWidth())
                     }
                 }
             }
