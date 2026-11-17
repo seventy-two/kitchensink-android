@@ -59,8 +59,11 @@ data class LightsData(
     }
 }
 
-/** The lights as the app's lights card has them, from the monitor whose short view is a row of switch buttons. */
-fun lightsData(snapshots: List<Snapshot>, config: Config): LightsData {
+/**
+ * The lights as the app's lights card has them, from the monitor whose short view is a row of switch buttons.
+ * [ticked] holds lights just switched ("monitor/id" to off), shown so until the server says otherwise, as in the app.
+ */
+fun lightsData(snapshots: List<Snapshot>, config: Config, ticked: Map<String, Boolean> = emptyMap()): LightsData {
     val base = LightsData(configured = config.configured, theme = config.theme, black = config.oled.black)
     val s = switchesPanel(snapshots) ?: return base
     val b = s.summaryBlock ?: return base
@@ -68,7 +71,7 @@ fun lightsData(snapshots: List<Snapshot>, config: Config): LightsData {
         monitor = s.monitor,
         groups = buttonGroups(b).map { g ->
             g.mapIndexed { i, it ->
-                val on = !it.done
+                val on = !(ticked["${s.monitor}/${it.id}"] ?: it.done)
                 LightButton(
                     id = it.id,
                     label = if (i > 0) it.title.substring(switchGroup(it.title).length + 1) else it.title,

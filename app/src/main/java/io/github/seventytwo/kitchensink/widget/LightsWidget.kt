@@ -54,14 +54,8 @@ import io.github.seventytwo.kitchensink.MainActivity
 import io.github.seventytwo.kitchensink.R
 import io.github.seventytwo.kitchensink.data.ConfigStore
 import java.io.File
-import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
 
 /**
  * A home screen widget of just the lights, as the app's lights card: one
@@ -128,20 +122,10 @@ class ToggleLight : ActionCallback {
         val id = parameters[LightId] ?: return
         val data = LightsStore.load(context)
         if (data.monitor.isEmpty()) return
-        LightsStore.show(context, data.toggled(id))
-        withContext(Dispatchers.IO) {
-            val c = ConfigStore(context).load()
-            if (!c.configured) return@withContext
-            val body = buildJsonObject { put("type", "toggle"); put("id", id) }.toString()
-            val req = Request.Builder().url(c.url.trim().trimEnd('/') + "/api/monitors/${data.monitor}/actions")
-                .header("Authorization", "Bearer ${c.token}")
-                .post(body.toRequestBody("application/json".toMediaType())).build()
-            try {
-                (context.applicationContext as KitchensinkApp).http.newCall(req).execute().close()
-            } catch (_: IOException) {
-            } catch (_: IllegalArgumentException) {
-            }
-        }
+        val now = data.toggled(id)
+        LightsStore.show(context, now)
+        val off = now.groups.flatten().firstOrNull { it.id == id }?.on == false
+        withContext(Dispatchers.Main) { (context.applicationContext as KitchensinkApp).hub.toggleFromWidget(data.monitor, id, off) }
     }
 }
 

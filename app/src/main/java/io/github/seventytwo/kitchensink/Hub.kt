@@ -33,14 +33,18 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import java.io.IOException
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 
 /**
  * The app's state: settings, the stream and the dashboard built from it.
  * There's one for the process, shared by the activity, the background
  * service and the notifications. Everything here runs on the main thread.
  */
-class Hub(private val context: Context, private val store: ConfigStore, http: OkHttpClient) {
+class Hub(private val context: Context, private val store: ConfigStore, private val http: OkHttpClient) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val inbox = Channel<Inbound>(Channel.UNLIMITED)
     private var dashboard = Dashboard()
@@ -82,6 +86,8 @@ class Hub(private val context: Context, private val store: ConfigStore, http: Ok
 
     init {
         dashboard.restoreCleared(_config.value.cleared)
+        // A light switched, or its switch over, shows in the widget at once.
+        scope.launch { _ticked.collect { refreshLights() } }
         scope.launch {
             for (m in inbox) {
                 handle(m)
@@ -189,7 +195,49 @@ class Hub(private val context: Context, private val store: ConfigStore, http: Ok
             val c = _config.value
             if (c.configured && _snapshots.value.isEmpty()) return@launch
             WidgetStore.show(context, widgetData(_snapshots.value, c))
-            LightsStore.show(context, lightsData(_snapshots.value, c))
+        }
+        refreshLights()
+    }
+
+    /**
+     * Saves what the lights widget shows straight away (it's small), with
+     * lights just switched shown so, so a snapshot of something else can't
+     * put a bulb back while the switch is on its way.
+     */
+    private fun refreshLights() {
+        val c = _config.value
+        if (c.configured && _snapshots.value.isEmpty()) return
+        val data = lightsData(_snapshots.value, c, _ticked.value)
+        scope.launch { LightsStore.show(context, data) }
+    }
+
+    /**
+     * A light switched from the widget, which has already drawn it so: sent
+     * over the stream's client if it's running, straight to the server if
+     * not, and kept as switched until the server's update comes.
+     */
+    fun toggleFromWidget(monitor: String, id: String, off: Boolean) {
+        if (client.running) {
+            toggle(monitor, id, off)
+            return
+        }
+        _ticked.value += "$monitor/$id" to off
+        scope.launch {
+            delay(10_000)
+            _ticked.value -= "$monitor/$id"
+        }
+        val c = _config.value
+        if (!c.configured) return
+        val body = buildJsonObject { put("type", "toggle"); put("id", id) }.toString()
+        val req = Request.Builder().url(c.url.trim().trimEnd('/') + "/api/monitors/$monitor/actions")
+            .header("Authorization", "Bearer ${c.token}")
+            .post(body.toRequestBody("application/json".toMediaType())).build()
+        scope.launch(Dispatchers.IO) {
+            try {
+                http.newCall(req).execute().close()
+            } catch (_: IOException) {
+            } catch (_: IllegalArgumentException) {
+            }
         }
     }
 
