@@ -122,6 +122,9 @@ fun CompactCard(s: Snapshot, show: Show, onToggle: (() -> Unit)?) {
                 fun summary(modifier: Modifier) {
                     Box(modifier) {
                         when {
+                            // A short table with no rows (Big box with nothing worth a
+                            // look today) shows nothing, not even its headings.
+                            s.summaryBlock?.type == "table" && s.summaryBlock.rows.isEmpty() -> {}
                             s.summaryBlock != null -> BlockView(s.monitor, s.summaryBlock)
                             s.summary.isNotEmpty() -> Summary(s.summary, s.summaryStyle)
                             s.blocks.isEmpty() && !failed -> Text("Waiting for the first check…", style = mt.body, color = p.muted)
