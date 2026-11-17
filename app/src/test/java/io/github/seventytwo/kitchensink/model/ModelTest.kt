@@ -208,4 +208,19 @@ class ModelTest {
         assertFalse(s.summary[3].hasSpark)
         assertNull(s.summary[3].spark)
     }
+
+    @Test
+    fun summaryOnlyAndBars() {
+        val only = parseSnapshot(
+            """{"monitor":"claude","subtitle":"Read 2m ago","subtitleHover":true,
+              "summary":[{"label":"Week","value":"31%","bar":true,"level":0.31},{"label":"Odd","value":"1","bar":true}]}""",
+        )
+        assertTrue(only.summaryOnly())
+        assertTrue(only.subtitleHover)
+        assertTrue(only.summary[0].isBar)
+        assertFalse(only.summary[1].isBar) // a bar needs a level
+        assertFalse(only.copy(error = "down").summaryOnly())
+        assertFalse(parseSnapshot("""{"monitor":"m","summary":[{"label":"a","value":"b"}],"blocks":[{"type":"text","text":"x"}]}""").summaryOnly())
+        assertFalse(parseSnapshot("""{"monitor":"m"}""").summaryOnly())
+    }
 }

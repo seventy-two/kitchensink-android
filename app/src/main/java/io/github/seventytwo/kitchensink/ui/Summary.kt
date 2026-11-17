@@ -9,12 +9,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -41,6 +45,7 @@ import io.github.seventytwo.kitchensink.model.ChipSpacing
 import io.github.seventytwo.kitchensink.model.Spark
 import io.github.seventytwo.kitchensink.model.Stat
 import io.github.seventytwo.kitchensink.model.Tone
+import io.github.seventytwo.kitchensink.model.isBar
 import io.github.seventytwo.kitchensink.model.layoutChips
 import kotlin.math.PI
 import kotlin.math.cos
@@ -276,17 +281,37 @@ fun Chips(stats: List<Stat>, modifier: Modifier = Modifier) {
     }
 }
 
-/** Stats as tiles of label, value and detail, flowing onto more lines when they don't fit. */
+/**
+ * Stats as tiles of label, value and detail, flowing onto more lines when
+ * they don't fit. A bar tile is one line: its label, the bar, then its
+ * value, without its detail (Windows keeps that for a tooltip); a summary
+ * of nothing but bars (Claude's limits) shares the line between them, so
+ * they run across rather than sit stubby.
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun Tiles(stats: List<Stat>, modifier: Modifier = Modifier) {
     val p = LocalPalette.current
     val mt = LocalMetrics.current
-    val details = stats.any { it.detail.isNotEmpty() }
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    val details = stats.any { !it.isBar && it.detail.isNotEmpty() }
+    val spacing = 24.dp
     BoxWithConstraints(modifier.fillMaxWidth()) {
         val max = maxWidth
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(24.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        val barShare = if (stats.all { it.isBar }) {
+            val n = stats.size
+            minOf((max - spacing * (n - 1)) / n, 280.dp)
+        } else 0.dp
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(spacing), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             for (s in stats) {
+                if (s.isBar) {
+                    val natural = with(density) {
+                        (measurer.measure(s.label, mt.caption, maxLines = 1).size.width + measurer.measure(s.value, mt.caption, maxLines = 1).size.width).toDp()
+                    } + BarGap * 2 + BarMin
+                    BarTile(s, Modifier.width(minOf(maxOf(natural, barShare), max)))
+                    continue
+                }
                 Column(Modifier.widthIn(max = max)) {
                     Text(s.label, style = mt.caption, color = p.muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(s.value, style = mt.heading, color = p.tone(s.tone), maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -294,5 +319,23 @@ fun Tiles(stats: List<Stat>, modifier: Modifier = Modifier) {
                 }
             }
         }
+    }
+}
+
+private val BarGap = 6.dp
+private val BarMin = 48.dp
+
+/** A summary's bar tile on one line: its label, a bar filled to its level, then its value. */
+@Composable
+private fun BarTile(s: Stat, modifier: Modifier) {
+    val p = LocalPalette.current
+    val mt = LocalMetrics.current
+    Row(modifier, verticalAlignment = Alignment.CenterVertically) {
+        Text(s.label, style = mt.caption, color = p.muted, maxLines = 1)
+        Canvas(Modifier.padding(horizontal = BarGap).weight(1f).height(5.dp)) {
+            drawRect(p.frame)
+            drawRect(barFill(p, s.tone), size = Size(size.width * (s.level ?: 0f), size.height))
+        }
+        Text(s.value, style = mt.caption, color = p.tone(s.tone), maxLines = 1)
     }
 }

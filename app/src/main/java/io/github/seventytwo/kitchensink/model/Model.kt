@@ -55,6 +55,8 @@ data class Stat(
     val tag: String = "",
     /** A price line drawn in a chip, when it has two points or more. */
     val spark: Spark? = null,
+    /** Drawn as a bar filled to [level], e.g. how much of a limit is used. */
+    val bar: Boolean = false,
 ) {
     /** Whether [spark] has enough to draw a line. */
     val hasSpark: Boolean get() = spark != null && spark.points.isNotEmpty() && spark.points.size + spark.ext.size >= 2
@@ -137,6 +139,11 @@ data class Snapshot(
     val error: String = "",
     /** What it's watching, when that isn't obvious. */
     val subtitle: String = "",
+    /**
+     * The subtitle is for a closer look only (when Claude's usage was read):
+     * Windows shows it on hover; here a row leaves it out.
+     */
+    val subtitleHover: Boolean = false,
     /** When it was updated matters at the moment. */
     val timely: Boolean = false,
     /** It only feeds other panels (the mail reader), so it's shown in the settings, not the dashboard. */
@@ -206,6 +213,7 @@ private fun parseStat(e: JsonElement): Stat {
         icon = j.str("icon"),
         level = (j["level"] as? JsonPrimitive)?.takeIf { !it.isString }?.floatOrNull?.coerceIn(0f, 1f),
         lead = j.flag("lead"),
+        bar = j.flag("bar"),
         url = j.str("url"),
         tag = j.str("tag"),
         spark = (j["spark"] as? JsonObject)?.let { sp ->
@@ -286,6 +294,7 @@ fun parseSnapshot(e: JsonElement): Snapshot {
         title = j.str("title"),
         error = j.str("error"),
         subtitle = j.str("subtitle"),
+        subtitleHover = j.flag("subtitleHover"),
         timely = j.flag("timely"),
         background = j.flag("background"),
         // Go sends its zero time, year 1, for a monitor that hasn't polled yet.
@@ -337,6 +346,12 @@ fun ago(then: Long, now: Long): String {
         else -> "${s / 86400}d ago"
     }
 }
+
+/** Whether a monitor sends only a summary, no panel (Claude's limits): it stays a row and never opens. */
+fun Snapshot.summaryOnly(): Boolean = blocks.isEmpty() && summary.isNotEmpty() && error.isEmpty()
+
+/** Whether a stat is drawn as a bar. */
+val Stat.isBar: Boolean get() = bar && level != null
 
 /** Whether a snapshot has any private blocks or stats. */
 fun Snapshot.hasPrivate(): Boolean =

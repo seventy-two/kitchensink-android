@@ -12,7 +12,13 @@ for all three.
   watchlist) as plain blocks with a price line under them, dotted on
   through pre-market or after-hours trading, any `tag` small after the
   value), so new monitors appear without client changes. A chip with a
-  `url` opens it when tapped. The drawing follows the Windows client's.
+  `url` opens it when tapped. A stat marked `bar` is drawn as a bar
+  filled to its `level`, in panels and summary tiles (in a tile, one line:
+  label, bar, value, leaving out its detail); a summary of nothing but bars
+  shares the line between them. A `subtitleHover` subtitle (Windows shows
+  it on hover) is left out of the compact rows. A monitor that sends only
+  a summary (no blocks) stays a row and never opens. The drawing follows
+  the Windows client's.
 - **Compact layout** (phones, tablets on their side, TVs): each monitor is
   one row of its summary, and full panels open beneath their rows, in panel
   order, as long as they fit the screen whole; one that doesn't stays a row.

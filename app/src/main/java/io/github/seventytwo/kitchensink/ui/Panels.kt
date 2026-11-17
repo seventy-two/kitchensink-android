@@ -38,7 +38,9 @@ import io.github.seventytwo.kitchensink.model.Show
 import io.github.seventytwo.kitchensink.model.Snapshot
 import io.github.seventytwo.kitchensink.model.ago
 import io.github.seventytwo.kitchensink.model.fitPanels
+import io.github.seventytwo.kitchensink.model.isBar
 import io.github.seventytwo.kitchensink.model.repin
+import io.github.seventytwo.kitchensink.model.summaryOnly
 
 private val Slot = 36.dp
 
@@ -56,7 +58,8 @@ private fun PanelBody(s: Snapshot, wrapSubtitle: Boolean = true) {
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         if (wrapSubtitle && s.subtitle.isNotEmpty()) Text(s.subtitle, style = mt.caption, color = p.muted)
         if (s.error.isNotEmpty()) ErrorLine(s.error)
-        if (s.blocks.isEmpty() && s.error.isEmpty()) Text("Waiting for the first check…", style = mt.body, color = p.muted)
+        if (s.summaryOnly()) Summary(s.summary, s.summaryStyle)
+        else if (s.blocks.isEmpty() && s.error.isEmpty()) Text("Waiting for the first check…", style = mt.body, color = p.muted)
         for (b in s.blocks) BlockView(s.monitor, b)
     }
 }
@@ -101,7 +104,8 @@ fun CompactCard(s: Snapshot, show: Show, onToggle: (() -> Unit)?) {
                 s.updated == 0L -> "waiting…"
                 else -> ""
             }
-            Column(Modifier.fillMaxWidth().tappable(onClick = toggle).padding(start = mt.cardPadH, end = 4.dp, top = mt.cardPadV, bottom = mt.cardPadV)) {
+            val only = s.summaryOnly()
+            Column(Modifier.fillMaxWidth().tappable(enabled = !only, onClick = toggle).padding(start = mt.cardPadH, end = 4.dp, top = mt.cardPadV, bottom = mt.cardPadV)) {
                 @Composable
                 fun right() {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -109,7 +113,9 @@ fun CompactCard(s: Snapshot, show: Show, onToggle: (() -> Unit)?) {
                             if (failed) Icon(Icons.Filled.Warning, null, Modifier.width(13.dp), tint = p.warn)
                             Text(whenText, style = mt.caption, color = if (failed) p.warn else p.muted, modifier = Modifier.padding(start = 4.dp, end = 4.dp))
                         }
-                        Icon(Icons.Filled.KeyboardArrowDown, "Open", Modifier.width(20.dp), tint = p.muted)
+                        // A monitor with only a summary never opens: no chevron, but its room kept.
+                        if (only) Spacer(Modifier.width(20.dp))
+                        else Icon(Icons.Filled.KeyboardArrowDown, "Open", Modifier.width(20.dp), tint = p.muted)
                     }
                 }
                 @Composable
@@ -123,14 +129,17 @@ fun CompactCard(s: Snapshot, show: Show, onToggle: (() -> Unit)?) {
                         }
                     }
                 }
-                if (s.subtitle.isNotEmpty()) {
+                // A hover-only subtitle is for a closer look: touch has no hover, so a row leaves it out.
+                if (s.subtitle.isNotEmpty() && !s.subtitleHover) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(s.subtitle, style = mt.caption, color = p.muted, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                         right()
                     }
                     summary(Modifier.fillMaxWidth().padding(end = 10.dp, top = 2.dp))
                 } else {
-                    Row(verticalAlignment = Alignment.Top) {
+                    // A line of bars (Claude's limits) sits level with the text beside it.
+                    val bars = s.summaryBlock == null && s.summary.isNotEmpty() && s.summary.all { it.isBar }
+                    Row(verticalAlignment = if (bars) Alignment.CenterVertically else Alignment.Top) {
                         summary(Modifier.weight(1f).padding(end = 8.dp))
                         right()
                     }
@@ -181,7 +190,7 @@ fun CompactPanels(
 
     fun tapped(i: Int) {
         val ps = measured.panels
-        if (i >= ps.size || i >= panels.size) return
+        if (i >= ps.size || i >= panels.size || panels[i].summaryOnly()) return
         val open = measured.fit.show[i] == Show.Row
         onPin(panels[i].monitor, repin(ps, i, open, heightPx, gapPx))
     }
@@ -193,7 +202,7 @@ fun CompactPanels(
         val rows = panels.mapIndexed { i, s -> subcompose(s.monitor + "#row") { CompactCard(s, Show.Row) { tapped(i) } }.first().measure(cw) }
         val fulls = panels.mapIndexed { i, s -> subcompose(s.monitor + "#full") { CompactCard(s, Show.Full) { tapped(i) } }.first().measure(cw) }
         val ps = panels.mapIndexed { i, s ->
-            Panel(rows[i].height.toFloat(), fulls[i].height.toFloat(), pins[s.monitor] ?: Pin.Auto)
+            Panel(rows[i].height.toFloat(), fulls[i].height.toFloat(), if (s.summaryOnly()) Pin.Closed else pins[s.monitor] ?: Pin.Auto)
         }
         val fit = fitPanels(ps, heightPx, gapPx)
         measured.panels = ps

@@ -1793,6 +1793,40 @@
    ]
   },
   {
+   "monitor": "claude",
+   "kind": "claude",
+   "title": "Claude",
+   "updated": "2026-10-12T14:40:00Z",
+   "subtitle": "Read 20m ago",
+   "subtitleHover": true,
+   "timely": true,
+   "blocks": [],
+   "summary": [
+    {
+     "label": "Session",
+     "value": "2%",
+     "detail": "resets 19:00",
+     "level": 0.02,
+     "bar": true
+    },
+    {
+     "label": "Week",
+     "value": "31%",
+     "detail": "resets Thu 09:00",
+     "level": 0.31,
+     "bar": true
+    },
+    {
+     "label": "Fable",
+     "value": "86%",
+     "detail": "resets Thu 09:00",
+     "level": 0.86,
+     "bar": true,
+     "tone": "warn"
+    }
+   ]
+  },
+  {
    "monitor": "football",
    "kind": "football",
    "title": "Football",

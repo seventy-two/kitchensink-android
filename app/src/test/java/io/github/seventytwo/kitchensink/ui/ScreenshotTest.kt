@@ -201,6 +201,29 @@ class ScreenshotTest {
         compose.onRoot().captureRoboImage("build/screenshots/table-actions-tapped.png")
     }
 
+    // Stats marked bar: in a panel's stats block, and as a summary of only bars.
+    @Test @Robo(qualifiers = "w411dp-h891dp-port-xxhdpi")
+    fun bars() {
+        val block = parseSnapshot(
+            """{"monitor": "limits", "blocks": [{"type": "stats", "stats": [
+                {"label": "Session", "value": "2%", "detail": "resets 19:00", "level": 0.02, "bar": true},
+                {"label": "Week", "value": "31%", "detail": "resets Thu", "level": 0.31, "bar": true},
+                {"label": "Fable", "value": "86%", "detail": "resets Thu", "level": 0.86, "bar": true, "tone": "warn"},
+                {"label": "Plain", "value": "12"}]}]}""",
+        )
+        val claude = snapshots.first { it.monitor == "claude" }
+        compose.setContent {
+            Themed {
+                androidx.compose.foundation.layout.Column(Modifier.fillMaxSize().background(LocalPalette.current.bg).padding(16.dp)) {
+                    Box(Modifier.fillMaxWidth().background(LocalPalette.current.card).padding(12.dp)) { BlockView("limits", block.blocks[0]) }
+                    Box(Modifier.padding(top = 8.dp)) { CompactCard(claude, io.github.seventytwo.kitchensink.model.Show.Row) {} }
+                }
+            }
+        }
+        compose.waitForIdle()
+        compose.onRoot().captureRoboImage("build/screenshots/bars.png")
+    }
+
     @Test @Robo(qualifiers = "w411dp-h891dp-port-xxhdpi")
     fun notSetUp() = shot("not-set-up", s = state(Config()).copy(conn = ConnState.NotConfigured, snapshots = emptyList()))
 

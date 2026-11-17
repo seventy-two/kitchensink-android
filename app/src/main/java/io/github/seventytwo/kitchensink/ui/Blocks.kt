@@ -33,7 +33,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.SolidColor
@@ -56,6 +58,7 @@ import io.github.seventytwo.kitchensink.model.Align
 import io.github.seventytwo.kitchensink.model.Block
 import io.github.seventytwo.kitchensink.model.Stat
 import io.github.seventytwo.kitchensink.model.Tone
+import io.github.seventytwo.kitchensink.model.isBar
 import io.github.seventytwo.kitchensink.model.parseHexColour
 import kotlin.math.ceil
 
@@ -89,6 +92,10 @@ private fun StatsBlock(stats: List<Stat>) {
             for (row in stats.chunked(perRow)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(spacing)) {
                     for (s in row) {
+                        if (s.isBar) {
+                            BarStat(s, Modifier.width(tileW))
+                            continue
+                        }
                         Column(Modifier.width(tileW)) {
                             Text(s.label, style = mt.caption, color = p.muted, maxLines = 1)
                             Row(verticalAlignment = Alignment.Bottom) {
@@ -111,6 +118,37 @@ private fun StatsBlock(stats: List<Stat>) {
             }
         }
     }
+}
+
+/**
+ * A stat drawn as a bar across the tile, filled to its level (e.g. how much
+ * of a limit is used), with the value small beside the label and the
+ * detail under it.
+ */
+@Composable
+private fun BarStat(s: Stat, modifier: Modifier) {
+    val p = LocalPalette.current
+    val mt = LocalMetrics.current
+    Column(modifier) {
+        Row {
+            Text(s.label, style = mt.caption, color = p.muted, maxLines = 1, modifier = Modifier.weight(1f))
+            Text(s.value, style = mt.caption, color = p.tone(s.tone), maxLines = 1)
+        }
+        Canvas(Modifier.fillMaxWidth().padding(top = 4.dp).height(8.dp)) {
+            val r = CornerRadius(size.height / 2)
+            drawRoundRect(p.frame, cornerRadius = r)
+            val fw = size.width * (s.level ?: 0f)
+            if (fw > 0) drawRoundRect(barFill(p, s.tone), size = Size(maxOf(fw, size.height), size.height), cornerRadius = r)
+        }
+        Text(s.detail.ifEmpty { " " }, style = mt.caption, color = p.muted, maxLines = 2)
+    }
+}
+
+/** How full a bar is: in the accent normally, the tone's colour as it fills up. */
+fun barFill(p: Palette, t: Tone): Color = when (t) {
+    Tone.Warn, Tone.Bad -> p.tone(t)
+    Tone.Muted -> p.muted
+    else -> p.accent
 }
 
 @Composable
