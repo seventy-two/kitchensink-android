@@ -30,6 +30,8 @@ data class LightButton(
 @Serializable
 data class LightsData(
     val configured: Boolean = false,
+    /** Nothing saved yet: the app's been asked for the lights. */
+    val loading: Boolean = false,
     /** The lights monitor, which toggles are sent to; empty if there isn't one. */
     val monitor: String = "",
     /** The lights in the app's groups: a room's own row heads its numbered lights, joined as one button. */

@@ -70,7 +70,14 @@ class LightsWidget : GlanceAppWidget() {
     override val sizeMode: SizeMode = SizeMode.Exact
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val data = withContext(Dispatchers.IO) { LightsStore.load(context) }
+        val data = withContext(Dispatchers.IO) {
+            if (LightsStore.saved(context)) return@withContext LightsStore.load(context)
+            val c = ConfigStore(context).load()
+            LightsData(configured = c.configured, loading = c.configured, theme = c.theme, black = c.oled.black)
+        }
+        // Nothing saved yet: have the app fetch the dashboard, which saves
+        // the lights and redraws this.
+        if (data.loading) withContext(Dispatchers.Main) { (context.applicationContext as KitchensinkApp).hub.fillWidgets() }
         provideContent { LightsContent(data) }
     }
 }
@@ -82,6 +89,8 @@ class LightsWidgetReceiver : GlanceAppWidgetReceiver() {
 /** What the lights widget shows, kept as lights-widget.json in the app's private storage. */
 object LightsStore {
     private fun file(context: Context) = File(context.filesDir, "lights-widget.json")
+
+    fun saved(context: Context) = file(context).exists()
 
     fun load(context: Context): LightsData = try {
         LightsData.decode(file(context).readText())
@@ -151,6 +160,7 @@ internal fun LightsContent(data: LightsData, scroll: Boolean = true) {
         }
         val message = when {
             !data.configured -> "Set up kitchensink in the app first."
+            data.loading -> "Loading the lights…"
             data.monitor.isEmpty() -> "No lights on the dashboard yet."
             else -> ""
         }

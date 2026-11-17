@@ -193,6 +193,29 @@ class Hub(private val context: Context, private val store: ConfigStore, http: Ok
         }
     }
 
+    /**
+     * For a widget with nothing saved yet (just added, or the app updated
+     * and not opened since): saves what the dashboard has, connecting first
+     * if need be, and lets go again a minute later if the app isn't open and
+     * isn't kept connected.
+     */
+    fun fillWidgets() {
+        val c = _config.value
+        if (!c.configured) return
+        if (_snapshots.value.isNotEmpty()) {
+            refreshWidget()
+            return
+        }
+        ensureStream()
+        if (!foreground && !c.background) {
+            stopLater?.cancel()
+            stopLater = scope.launch {
+                delay(60_000)
+                if (!foreground) client.stop()
+            }
+        }
+    }
+
     fun update(f: (Config) -> Config) {
         val old = _config.value
         var c = f(old)

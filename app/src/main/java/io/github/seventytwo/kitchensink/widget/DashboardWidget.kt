@@ -42,6 +42,7 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import io.github.seventytwo.kitchensink.KitchensinkApp
 import io.github.seventytwo.kitchensink.MainActivity
 import io.github.seventytwo.kitchensink.data.ThemeChoice
 import io.github.seventytwo.kitchensink.model.Tone
@@ -61,7 +62,10 @@ class DashboardWidget : GlanceAppWidget() {
     override val sizeMode: SizeMode = SizeMode.Exact
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val data = withContext(Dispatchers.IO) { WidgetStore.load(context) }
+        val (data, saved) = withContext(Dispatchers.IO) { WidgetStore.load(context) to WidgetStore.saved(context) }
+        // Nothing saved yet: have the app fetch the dashboard, which saves
+        // it and redraws this.
+        if (!saved) withContext(Dispatchers.Main) { (context.applicationContext as KitchensinkApp).hub.fillWidgets() }
         provideContent { WidgetContent(data, System.currentTimeMillis() / 1000) }
     }
 }
@@ -73,6 +77,8 @@ class DashboardWidgetReceiver : GlanceAppWidgetReceiver() {
 /** What the widget shows, kept as widget.json in the app's private storage. */
 object WidgetStore {
     private fun file(context: Context) = File(context.filesDir, "widget.json")
+
+    fun saved(context: Context) = file(context).exists()
 
     fun load(context: Context): WidgetData = try {
         WidgetData.decode(file(context).readText())
