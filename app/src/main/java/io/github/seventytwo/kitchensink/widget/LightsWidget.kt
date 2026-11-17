@@ -11,6 +11,7 @@ import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
 import androidx.glance.ImageProvider
+import androidx.glance.LocalContext
 import androidx.glance.LocalSize
 import androidx.glance.action.ActionParameters
 import androidx.glance.action.actionParametersOf
@@ -21,6 +22,7 @@ import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.ActionCallback
 import androidx.glance.appwidget.action.actionRunCallback
+import androidx.glance.appwidget.action.actionStartActivity as startIntent
 import androidx.glance.appwidget.appWidgetBackground
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.lazy.LazyColumn
@@ -33,6 +35,7 @@ import androidx.glance.layout.Box
 import androidx.glance.layout.Column
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
+import androidx.glance.layout.fillMaxHeight
 import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
@@ -46,6 +49,7 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import io.github.seventytwo.kitchensink.KitchensinkApp
+import io.github.seventytwo.kitchensink.LightActivity
 import io.github.seventytwo.kitchensink.MainActivity
 import io.github.seventytwo.kitchensink.R
 import io.github.seventytwo.kitchensink.data.ConfigStore
@@ -216,13 +220,21 @@ private fun LightButtonView(b: LightButton, joined: Boolean, big: Boolean, c: Co
     }
     Box(modifier.padding(start = if (joined) 1.dp else 0.dp)) {
         Row(
-            GlanceModifier.fillMaxSize().background(c.frame).padding(horizontal = if (joined) 8.dp else 10.dp)
+            GlanceModifier.fillMaxSize().background(c.frame).padding(end = if (joined) 8.dp else 10.dp)
                 .clickable(actionRunCallback<ToggleLight>(actionParametersOf(LightId to b.id)))
                 .semantics { contentDescription = b.title + if (b.on) ", on" else ", off" },
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Image(ImageProvider(R.drawable.ic_bulb), null, GlanceModifier.size(if (big) 20.dp else 16.dp), colorFilter = ColorFilter.tint(bulb))
-            Spacer(GlanceModifier.width(if (joined) 3.dp else 6.dp))
+            // The bulb, with room round it for a finger, opens the light's
+            // brightness and colour: a widget can't take a long press.
+            Box(
+                GlanceModifier.fillMaxHeight().padding(start = if (joined) 6.dp else 8.dp, end = if (joined) 3.dp else 6.dp)
+                    .clickable(startIntent(LightActivity.intent(LocalContext.current, b.id)))
+                    .semantics { contentDescription = b.title + " brightness and colour" },
+                contentAlignment = Alignment.Center,
+            ) {
+                Image(ImageProvider(R.drawable.ic_bulb), null, GlanceModifier.size(if (big) 22.dp else 18.dp), colorFilter = ColorFilter.tint(bulb))
+            }
             Text(b.label, style = TextStyle(color = if (b.on) c.text else c.muted, fontSize = if (big) 16.sp else 13.sp), maxLines = 1)
         }
     }

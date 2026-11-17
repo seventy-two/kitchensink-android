@@ -87,7 +87,8 @@ for all three.
   takes the spare width and its numbered lights are narrow. Tap a light to
   switch it: it shows at once and the monitor is sent the same toggle the
   app sends, with the server's next update putting it right if it didn't
-  take. The lines share the widget's height, from a comfortable tap on a
+  take. Tap a light's bulb for its brightness and colour, in the same
+  controls as the app's (a widget can't take a long press). The lines share the widget's height, from a comfortable tap on a
   phone to big buttons on a tablet, scrolling past that. It follows the
   app's theme and is redrawn whenever the dashboard changes.
 - Checklists (the `todo` monitor) can be ticked, added to and deleted from;
@@ -104,7 +105,8 @@ for all three.
   a warning subtitle (e.g. unavailable) shows before the swatch. A `buttons` block (the lights'
   summary block, shown when the panel is short) is a row of small buttons,
   each with a bulb lit in the light's colour (a warm white without one)
-  while on; tapping one opens its tile in a dialog. Lights named alike but
+  while on; tapping one turns it on or off, and a long press opens its
+  tile (brightness and colour) in a dialog. Lights named alike but
   for a number at the end (Hallway 1, Hallway 2) are one joined button,
   the rest of the group named only by number, and a group wraps whole. The
   server's row for the whole room ("Hallway", switching them together)

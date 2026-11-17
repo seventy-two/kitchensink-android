@@ -91,7 +91,7 @@ private val WarmBulb = Color(0xFFFFD68C)
  * (Hallway 1, Hallway 2) are one joined button, the first part named in full, the rest only by number; the
  * server's row for the whole room ("Hallway"), just before them, heads it. A group
  * wraps whole. [stack] puts each group on a line of its own, the full width, shared equally (the Recent column's
- * card). Tapping a switch opens its controls, as a [SwitchTile], in a dialog.
+ * card). Tapping a switch turns it on or off; a long press opens its controls, as a [SwitchTile], in a dialog.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -152,7 +152,7 @@ private fun ChecklistButton(monitor: String, b: Block, it: Item, index: Int, cou
     )
     Row(
         modifier.clip(shape).background(p.frame)
-            .tappable(shape = shape) { if (b.switches) open = true else actions.toggle(monitor, it.id, !done) }
+            .tappable(shape = shape, onLongClick = if (b.switches) ({ open = true }) else null) { actions.toggle(monitor, it.id, !done) }
             .semantics(mergeDescendants = true) { contentDescription = it.title }
             .padding(horizontal = 10.dp, vertical = if (LocalSlim.current) 2.dp else 6.dp),
         verticalAlignment = Alignment.CenterVertically,
