@@ -6,40 +6,38 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class LayoutTest {
-    private fun shows(f: Fit) = f.show.joinToString("") { if (it == Show.Full) "F" else if (it == Show.Clipped) "C" else "r" }
+    private fun shows(f: Fit) = f.show.joinToString("") { if (it == Show.Full) "F" else "r" }
 
     @Test
     fun fitsPanels() {
         // Rows of 50, gaps of 10: 300 high holds all four rows (240) with 60 over.
-        val p = mutableListOf(Panel(50f, 150f, 6f), Panel(50f, 600f, 6f), Panel(50f, 80f, 6f), Panel(50f, 100f, 6f))
+        val p = mutableListOf(Panel(50f, 150f), Panel(50f, 600f), Panel(50f, 80f), Panel(50f, 100f))
         // Plenty of room: everything opens.
-        assertEquals("FFFF", shows(fitPanels(p, 2000f, 10f, 40f)))
+        assertEquals("FFFF", shows(fitPanels(p, 2000f, 10f)))
         // The first opens (+100), the second wouldn't fit, the third and
-        // fourth open (+30, +50); the second takes what's left: 500 - 420 - 6 = 74.
-        val f = fitPanels(p, 500f, 10f, 40f)
-        assertEquals("FCFF", shows(f))
-        assertEquals(74f, f.body)
-        // At 400 the fourth no longer fits, and 24 is too little for a useful scrolling panel.
-        assertEquals("FrFr", shows(fitPanels(p, 400f, 10f, 40f)))
+        // fourth open (+30, +50). The second stays a row: never cut short
+        // to the 74 left over.
+        assertEquals("FrFF", shows(fitPanels(p, 500f, 10f)))
+        // At 400 the fourth no longer fits.
+        assertEquals("FrFr", shows(fitPanels(p, 400f, 10f)))
         // Pins win: a closed one stays closed and an open one opens first,
-        // even when it doesn't fit.
+        // at its full size, even when it doesn't fit.
         p[0] = p[0].copy(pin = Pin.Closed)
         p[1] = p[1].copy(pin = Pin.Open)
-        assertEquals("rFrr", shows(fitPanels(p, 500f, 10f, 40f)))
+        assertEquals("rFrr", shows(fitPanels(p, 500f, 10f)))
         // Unmeasured panels stay as rows.
-        assertEquals("rF", shows(fitPanels(listOf(Panel(50f, 0f, 6f), Panel(50f, 100f, 6f)), 2000f, 10f, 40f)))
+        assertEquals("rF", shows(fitPanels(listOf(Panel(50f, 0f), Panel(50f, 100f)), 2000f, 10f)))
     }
 
     @Test
     fun pinsOnlyWhatDiffersFromAutomatic() {
-        val p = listOf(Panel(50f, 150f, 6f), Panel(50f, 600f, 6f))
-        // At 300 the first opens by itself, the second doesn't fit, and 74
-        // left over is too little for it to scroll in.
-        assertEquals(Pin.Closed, repin(p, 0, open = false, 300f, 10f, 100f))
-        assertEquals(Pin.Open, repin(p, 1, open = true, 300f, 10f, 100f))
+        val p = listOf(Panel(50f, 150f), Panel(50f, 600f))
+        // At 300 the first opens by itself and the second doesn't fit.
+        assertEquals(Pin.Closed, repin(p, 0, open = false, 300f, 10f))
+        assertEquals(Pin.Open, repin(p, 1, open = true, 300f, 10f))
         // Opening the first again, once pinned closed, just goes back to automatic.
         val closed = listOf(p[0].copy(pin = Pin.Closed), p[1])
-        assertEquals(Pin.Auto, repin(closed, 0, open = true, 300f, 10f, 100f))
+        assertEquals(Pin.Auto, repin(closed, 0, open = true, 300f, 10f))
     }
 
     @Test

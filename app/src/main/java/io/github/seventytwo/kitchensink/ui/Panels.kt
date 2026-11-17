@@ -82,12 +82,11 @@ private fun RefreshButton(s: Snapshot) {
 
 /**
  * One monitor in the compact layout: collapsed, a row of its summary;
- * open, its full panel, with a strip down the right holding the close
- * chevron and refresh. A clipped panel scrolls within [body]. [onToggle]
- * opens or closes it; it's null while the card is only being measured.
+ * open, its full panel at its full height, with a strip down the right
+ * holding the close chevron and refresh. [onToggle] opens or closes it.
  */
 @Composable
-fun CompactCard(s: Snapshot, show: Show, body: Dp, onToggle: (() -> Unit)?) {
+fun CompactCard(s: Snapshot, show: Show, onToggle: (() -> Unit)?) {
     val p = LocalPalette.current
     val mt = LocalMetrics.current
     val state = LocalPanelState.current
@@ -138,17 +137,10 @@ fun CompactCard(s: Snapshot, show: Show, body: Dp, onToggle: (() -> Unit)?) {
                 }
             }
         } else {
-            val clip = show == Show.Clipped
             Row(Modifier.fillMaxWidth().padding(start = mt.cardPadH, top = mt.cardPadV, bottom = mt.cardPadV)) {
-                val scroll = rememberScrollState()
-                Box(Modifier.weight(1f).then(if (clip) Modifier.height(body).verticalScroll(scroll) else Modifier)) {
-                    PanelBody(s)
-                }
+                Box(Modifier.weight(1f)) { PanelBody(s) }
                 // The strip closes the panel when tapped.
-                Column(
-                    Modifier.width(Slot + 8.dp).then(if (clip) Modifier.height(body) else Modifier),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
+                Column(Modifier.width(Slot + 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     IconButtonSmall(Icons.Filled.KeyboardArrowUp, "Close", size = Slot, iconSize = 22.dp, onClick = toggle)
                     RefreshButton(s)
                     if (s.timely && s.updated > 0) {
@@ -168,9 +160,10 @@ private class Measured {
 
 /**
  * Fills the space with one row per monitor, full width so the summaries
- * line up, opening as many full panels as fit [viewport] (see fitPanels).
- * Tapping a row opens or closes it, and [onPin] keeps that choice while it
- * differs from what would happen by itself.
+ * line up, opening as many full panels as fit [viewport] whole (see
+ * fitPanels). Tapping a row opens or closes it, and [onPin] keeps that
+ * choice while it differs from what would happen by itself; the column
+ * scrolls if open panels run past the screen.
  */
 @Composable
 fun CompactPanels(
@@ -185,40 +178,28 @@ fun CompactPanels(
     val measured = remember { Measured() }
     val gapPx = with(density) { mt.gap.toPx() }
     val heightPx = with(density) { viewport.toPx() }
-    // A panel only takes the space left over if it shows something useful
-    // there: a table's header and four rows.
-    val minBody = with(density) { (mt.body.lineHeight.toDp() + mt.cellPadV * 2) * 5 }.let { with(density) { it.toPx() } }
 
     fun tapped(i: Int) {
         val ps = measured.panels
         if (i >= ps.size || i >= panels.size) return
         val open = measured.fit.show[i] == Show.Row
-        onPin(panels[i].monitor, repin(ps, i, open, heightPx, gapPx, minBody))
+        onPin(panels[i].monitor, repin(ps, i, open, heightPx, gapPx))
     }
 
     SubcomposeLayout(modifier) { constraints ->
         val w = constraints.maxWidth
         val cw = Constraints(minWidth = w, maxWidth = w)
         // Each monitor measured each way at this width.
-        val rows = panels.mapIndexed { i, s -> subcompose(s.monitor + "#row") { CompactCard(s, Show.Row, 0.dp) { tapped(i) } }.first().measure(cw) }
-        val fulls = panels.mapIndexed { i, s -> subcompose(s.monitor + "#full") { CompactCard(s, Show.Full, 0.dp) { tapped(i) } }.first().measure(cw) }
-        val clips = panels.map { s -> subcompose(s.monitor + "#clip0") { CompactCard(s, Show.Clipped, 0.dp, null) }.first().measure(cw) }
+        val rows = panels.mapIndexed { i, s -> subcompose(s.monitor + "#row") { CompactCard(s, Show.Row) { tapped(i) } }.first().measure(cw) }
+        val fulls = panels.mapIndexed { i, s -> subcompose(s.monitor + "#full") { CompactCard(s, Show.Full) { tapped(i) } }.first().measure(cw) }
         val ps = panels.mapIndexed { i, s ->
-            Panel(rows[i].height.toFloat(), fulls[i].height.toFloat(), (clips[i].height - rows[i].height).toFloat(), pins[s.monitor] ?: Pin.Auto)
+            Panel(rows[i].height.toFloat(), fulls[i].height.toFloat(), pins[s.monitor] ?: Pin.Auto)
         }
-        val fit = fitPanels(ps, heightPx, gapPx, minBody)
+        val fit = fitPanels(ps, heightPx, gapPx)
         measured.panels = ps
         measured.fit = fit
-        // The row and full copies are the real thing; only a clipped one,
-        // which depends on the space left, is made again.
-        val bodyDp = fit.body.toDp()
-        val placed = panels.mapIndexed { i, s ->
-            when (fit.show[i]) {
-                Show.Row -> rows[i]
-                Show.Full -> fulls[i]
-                Show.Clipped -> subcompose(s.monitor + "#clip") { CompactCard(s, Show.Clipped, bodyDp) { tapped(i) } }.first().measure(cw)
-            }
-        }
+        // The row and full copies are the real thing.
+        val placed = panels.indices.map { i -> if (fit.show[i] == Show.Full) fulls[i] else rows[i] }
         val gap = gapPx.toInt()
         val total = placed.sumOf { it.height } + gap * maxOf(0, placed.size - 1)
         layout(w, total) {

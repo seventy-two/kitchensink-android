@@ -31,8 +31,12 @@ fun shift(order: List<String>, id: String, by: Int): List<String> {
     return order.toMutableList().apply { removeAt(from); add(to, id) }
 }
 
-/** How much of a monitor the compact layout shows: its summary row, its full panel, or its panel cut short to fit, scrolling inside. */
-enum class Show { Row, Full, Clipped }
+/**
+ * How much of a monitor the compact layout shows: its summary row or its
+ * full panel. An open panel is always its full size, never cut short to
+ * fit: the column scrolls instead.
+ */
+enum class Show { Row, Full }
 
 /** A choice made by hand in the compact layout. */
 enum class Pin { Auto, Open, Closed }
@@ -43,20 +47,17 @@ data class Panel(
     val row: Float,
     /** With its full panel; 0 if not measured. */
     val full: Float,
-    /** What clipping adds to the row besides the scrolling area itself. */
-    val overhead: Float = 0f,
     val pin: Pin = Pin.Auto,
 )
 
-data class Fit(val show: List<Show>, val body: Float = 0f)
+data class Fit(val show: List<Show>)
 
 /**
  * Fills a column of [height] with panels, [gap] apart. Pinned ones are
- * open or closed as chosen; the rest open in order while they fit whole.
- * If space is left, the first that didn't fit takes it, scrolling, as long
- * as that gives it at least [minBody].
+ * open or closed as chosen; the rest open in order while they fit whole,
+ * and stay rows when they don't.
  */
-fun fitPanels(panels: List<Panel>, height: Float, gap: Float, minBody: Float): Fit {
+fun fitPanels(panels: List<Panel>, height: Float, gap: Float): Fit {
     val show = MutableList(panels.size) { Show.Row }
     var total = 0f
     for ((i, p) in panels.withIndex()) {
@@ -69,17 +70,7 @@ fun fitPanels(panels: List<Panel>, height: Float, gap: Float, minBody: Float): F
         show[i] = Show.Full
         total += p.full - p.row
     }
-    var body = 0f
-    for ((i, p) in panels.withIndex()) {
-        if (p.pin != Pin.Auto || show[i] != Show.Row || p.full <= 0) continue
-        val b = height - total - p.overhead
-        if (b >= minBody) {
-            show[i] = Show.Clipped
-            body = b
-        }
-        break
-    }
-    return Fit(show, body)
+    return Fit(show)
 }
 
 /**
@@ -87,9 +78,9 @@ fun fitPanels(panels: List<Panel>, height: Float, gap: Float, minBody: Float): F
  * while it differs from what would happen by itself, so a pin doesn't
  * outlive its use. [open] is whether it's being opened.
  */
-fun repin(panels: List<Panel>, index: Int, open: Boolean, height: Float, gap: Float, minBody: Float): Pin {
+fun repin(panels: List<Panel>, index: Int, open: Boolean, height: Float, gap: Float): Pin {
     val auto = panels.toMutableList().also { it[index] = it[index].copy(pin = Pin.Auto) }
-    val automatic = fitPanels(auto, height, gap, minBody).show[index] != Show.Row
+    val automatic = fitPanels(auto, height, gap).show[index] != Show.Row
     return when {
         open == automatic -> Pin.Auto
         open -> Pin.Open

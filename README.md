@@ -11,9 +11,10 @@ for all three.
   appear without client changes. The drawing follows the Windows client's.
 - **Compact layout** (phones, tablets on their side, TVs): each monitor is
   one row of its summary, and full panels open beneath their rows, in panel
-  order, as long as they fit the screen; the first that doesn't takes what's
-  left and scrolls, if that fits a table header and four rows. Tap a row
-  to open or close it yourself. Tall, wide screens (from about 840 x 900 dp)
+  order, as long as they fit the screen whole; one that doesn't stays a row.
+  An open panel is always its full size, never cut short to fit: tap a row
+  to open or close it yourself, and the column scrolls if it runs past the
+  screen. Tall, wide screens (from about 840 x 900 dp)
   show every full panel in columns instead.
 - **Portrait and landscape**: from 720 dp wide, Recent is a column beside
   the panels; narrower, the panels and Recent are two pages, swiped between,
