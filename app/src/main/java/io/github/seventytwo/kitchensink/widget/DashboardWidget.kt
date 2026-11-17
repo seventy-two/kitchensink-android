@@ -2,6 +2,8 @@ package io.github.seventytwo.kitchensink.widget
 
 import android.content.Context
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
@@ -66,7 +68,12 @@ class DashboardWidget : GlanceAppWidget() {
         // Nothing saved yet: have the app fetch the dashboard, which saves
         // it and redraws this.
         if (!saved) withContext(Dispatchers.Main) { (context.applicationContext as KitchensinkApp).hub.fillWidgets() }
-        provideContent { WidgetContent(data, System.currentTimeMillis() / 1000) }
+        // A widget's session lives on between updates without asking for
+        // its content again, so it follows what's saved from here on.
+        provideContent {
+            val live by WidgetStore.live.collectAsState()
+            WidgetContent(live ?: data, System.currentTimeMillis() / 1000)
+        }
     }
 }
 
@@ -77,6 +84,9 @@ class DashboardWidgetReceiver : GlanceAppWidgetReceiver() {
 /** What the widget shows, kept as widget.json in the app's private storage. */
 object WidgetStore {
     private fun file(context: Context) = File(context.filesDir, "widget.json")
+
+    /** What was last saved by this process, for widgets already showing. */
+    internal val live = kotlinx.coroutines.flow.MutableStateFlow<WidgetData?>(null)
 
     fun saved(context: Context) = file(context).exists()
 
@@ -89,6 +99,7 @@ object WidgetStore {
     /** Saves [data] and redraws the widgets, unless it's what they already show. */
     suspend fun show(context: Context, data: WidgetData) {
         val text = data.encode()
+        live.value = data
         val changed = withContext(Dispatchers.IO) {
             val f = file(context)
             if (f.exists() && f.readText() == text) return@withContext false
