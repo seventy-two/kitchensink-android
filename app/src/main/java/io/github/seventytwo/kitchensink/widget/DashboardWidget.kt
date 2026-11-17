@@ -8,7 +8,10 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
+import androidx.glance.ColorFilter
 import androidx.glance.GlanceModifier
+import androidx.glance.Image
+import androidx.glance.ImageProvider
 import androidx.glance.LocalSize
 import androidx.glance.action.Action
 import androidx.glance.action.actionStartActivity
@@ -27,6 +30,7 @@ import androidx.glance.color.ColorProvider
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
+import androidx.glance.layout.ContentScale
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxSize
@@ -102,21 +106,34 @@ internal fun widgetPalettes(theme: ThemeChoice, black: Boolean): Pair<Palette, P
 private fun coloured(t: Tone) = t == Tone.Good || t == Tone.Bad || t == Tone.Warn || t == Tone.Accent
 
 /** The palette's colours as Glance wants them, switching with the launcher's day and night. */
-private class Colours(private val day: Palette, private val night: Palette) {
-    private fun of(f: (Palette) -> Color): ColorProvider = ColorProvider(day = f(day), night = f(night))
+internal class Colours(private val day: Palette, private val night: Palette) {
+    fun of(f: (Palette) -> Color): ColorProvider = ColorProvider(day = f(day), night = f(night))
     val bg = of { it.bg }
     val card = of { it.card }
+    val frame = of { it.frame }
+    val border = of { it.border }
     val text = of { it.text }
     val muted = of { it.muted }
     val heading = of { it.heading }
     val warn = of { it.warn }
     fun tone(t: Tone) = of { it.tone(t) }
-    fun chip(t: Tone) = of { if (coloured(t)) it.tone(t).copy(alpha = 0.2f) else it.frame }
+
+    /** A chip's underline: its tone's colour, or the border's for a plain one. */
+    fun underline(t: Tone) = of { if (coloured(t)) it.tone(t) else it.border }
+
+    /** A price line's colour: muted for no tone. */
+    fun line(t: Tone, alpha: Float = 1f) = of { (if (t == Tone.None) it.muted else it.tone(t)).copy(alpha = alpha) }
+
+    /** How full a bar is: in the accent normally, the tone's colour as it fills up. */
+    fun barFill(t: Tone) = of { io.github.seventytwo.kitchensink.ui.barFill(it, t) }
 }
 
 private val Caption: TextUnit = 11.sp
 private val Value: TextUnit = 14.sp
 private val Gap: Dp = 4.dp
+
+/** The most children a widget's row or column may have. */
+private const val MaxChildren = 10
 
 /** The widget. [scroll] is off only in tests, as Robolectric can't fill a RemoteViews list. */
 @Composable
@@ -155,29 +172,49 @@ private fun Message(text: String, c: Colours, open: Action) {
     }
 }
 
-/** One monitor: its title, then its summary in lines of equal-width stats. [inner] is the width inside the card. */
+/** One monitor: its title, then its summary in lines of equal-width stats; or, slim, one line without its title. [inner] is the width inside the card. */
 @Composable
 private fun MonitorRow(row: WidgetRow, inner: Dp, c: Colours, open: Action) {
-    Column(GlanceModifier.fillMaxWidth().padding(bottom = Gap)) {
-        Column(GlanceModifier.fillMaxWidth().background(c.card).cornerRadius(8.dp).padding(horizontal = 8.dp, vertical = 6.dp).clickable(open)) {
-            Text(row.title, style = TextStyle(color = c.muted, fontSize = Caption, fontWeight = FontWeight.Medium), maxLines = 1)
-            Spacer(GlanceModifier.height(2.dp))
+    Column(GlanceModifier.fillMaxWidth().padding(bottom = if (row.slim) 3.dp else Gap)) {
+        val padV = if (row.slim) 4.dp else 6.dp
+        Column(GlanceModifier.fillMaxWidth().background(c.card).cornerRadius(8.dp).padding(horizontal = 8.dp, vertical = padV).clickable(open)) {
+            if (!row.slim) {
+                Text(row.title, style = TextStyle(color = c.muted, fontSize = Caption, fontWeight = FontWeight.Medium), maxLines = 1)
+                Spacer(GlanceModifier.height(2.dp))
+            }
             when {
-                row.error.isNotEmpty() -> Text(row.error, style = TextStyle(color = c.warn, fontSize = Caption), maxLines = 2)
-                row.stats.isEmpty() -> Text("Open for details", style = TextStyle(color = c.muted, fontSize = Caption), maxLines = 1)
+                row.error.isNotEmpty() -> Text(
+                    (if (row.slim) row.title + ": " else "") + row.error, style = TextStyle(color = c.warn, fontSize = Caption), maxLines = if (row.slim) 1 else 2,
+                )
+                row.stats.isEmpty() -> Text(if (row.slim) row.title else "Open for details", style = TextStyle(color = c.muted, fontSize = Caption), maxLines = 1)
+                row.slim -> SlimLine(row, inner, c)
+                row.stats.all { it.bar } -> {
+                    // A summary of only bars (Claude's limits): a line each.
+                    for ((i, s) in row.stats.withIndex()) {
+                        if (i > 0) Spacer(GlanceModifier.height(3.dp))
+                        BarLine(s, c)
+                    }
+                }
                 else -> {
-                    val n = statsPerLine(row.stats.size, inner.value, 72f, Gap.value)
+                    val sparks = row.chips && row.stats.any { !it.lead && it.spark != null }
+                    // A widget's row holds ten things at most.
+                    val n = statsPerLine(row.stats.size, inner.value, if (sparks) 96f else 72f, Gap.value).coerceAtMost(MaxChildren)
                     for ((i, line) in row.stats.chunked(n).withIndex()) {
-                        if (i > 0) Spacer(GlanceModifier.height(Gap))
                         // Stats on a line have the same parts, so they're one height.
                         val labels = line.any { it.label.isNotEmpty() }
-                        val details = line.any { it.detail.isNotEmpty() }
-                        Row(GlanceModifier.fillMaxWidth()) {
+                        val details = line.any { it.detail.isNotEmpty() && !it.bar }
+                        // Spaced with padding, not spacers, which would count towards the ten.
+                        Row(GlanceModifier.fillMaxWidth().padding(top = if (i > 0) Gap else 0.dp)) {
                             for (k in 0 until n) {
-                                if (k > 0) Spacer(GlanceModifier.width(Gap))
                                 val s = line.getOrNull(k)
-                                if (s == null) Spacer(GlanceModifier.defaultWeight())
-                                else StatCell(s, row.chips, labels, details, c, GlanceModifier.defaultWeight())
+                                val m = GlanceModifier.defaultWeight().padding(start = if (k > 0) Gap else 0.dp)
+                                when {
+                                    s == null -> Spacer(m)
+                                    s.bar -> Box(m.padding(vertical = 3.dp)) { BarLine(s, c) }
+                                    row.chips && s.lead -> LeadCell(s, c, m)
+                                    sparks -> SparkCell(s, c, m)
+                                    else -> StatCell(s, row.chips, labels, details, c, m)
+                                }
                             }
                         }
                     }
@@ -187,15 +224,120 @@ private fun MonitorRow(row: WidgetRow, inner: Dp, c: Colours, open: Action) {
     }
 }
 
-/** A stat as the app draws it: a chip filled with its tone's colour, or a plain tile. */
+/**
+ * A stat as the app draws it: a chip, its label above its value and
+ * underlined in its tone's colour, or a plain tile. The underline is a thin
+ * coloured box, as a widget can't draw a line.
+ */
 @Composable
 private fun StatCell(s: WidgetStat, chip: Boolean, labels: Boolean, details: Boolean, c: Colours, modifier: GlanceModifier) {
-    val back = if (chip) GlanceModifier.background(c.chip(s.tone)).cornerRadius(4.dp) else GlanceModifier
     val labelColour = if (chip && s.tone != Tone.Muted) c.text else c.muted
     val valueColour = if (chip && !coloured(s.tone) && s.tone != Tone.Muted) c.text else c.tone(s.tone)
-    Column(modifier.then(back).padding(horizontal = if (chip) 6.dp else 2.dp, vertical = 3.dp)) {
-        if (labels) Text(s.label.replace('\n', ' ').ifEmpty { " " }, style = TextStyle(color = labelColour, fontSize = Caption), maxLines = 1)
-        Text(s.value, style = TextStyle(color = valueColour, fontSize = Value, fontWeight = FontWeight.Bold), maxLines = 1)
-        if (details) Text(s.detail.replace('\n', ' ').ifEmpty { " " }, style = TextStyle(color = c.muted, fontSize = Caption), maxLines = 1)
+    Column(modifier) {
+        Column(GlanceModifier.fillMaxWidth().padding(horizontal = if (chip) 4.dp else 2.dp, vertical = 2.dp)) {
+            if (labels) Text(s.label.replace('\n', ' ').ifEmpty { " " }, style = TextStyle(color = labelColour, fontSize = Caption), maxLines = 1)
+            Text(s.value, style = TextStyle(color = valueColour, fontSize = Value, fontWeight = FontWeight.Bold), maxLines = 1)
+            if (details) Text(s.detail.replace('\n', ' ').ifEmpty { " " }, style = TextStyle(color = c.muted, fontSize = Caption), maxLines = 1)
+        }
+        if (chip) Box(GlanceModifier.fillMaxWidth().height(2.dp).background(c.underline(s.tone))) {}
+    }
+}
+
+/** A lead chip (the portfolio's day): its label and value as plain text on one line. */
+@Composable
+private fun LeadCell(s: WidgetStat, c: Colours, modifier: GlanceModifier) {
+    Row(modifier.padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(s.label, style = TextStyle(color = if (s.tone == Tone.Muted) c.muted else c.text, fontSize = Caption), maxLines = 1)
+        Spacer(GlanceModifier.width(5.dp))
+        Text(s.value, style = TextStyle(color = if (coloured(s.tone)) c.tone(s.tone) else c.text, fontSize = Value, fontWeight = FontWeight.Bold), maxLines = 1)
+    }
+}
+
+/** A watchlist chip: a plain block, its label and value (and any tag) on one line, its price line under them. */
+@Composable
+private fun SparkCell(s: WidgetStat, c: Colours, modifier: GlanceModifier) {
+    val valueColour = if (coloured(s.tone)) c.tone(s.tone) else if (s.tone == Tone.Muted) c.muted else c.text
+    Column(modifier.background(c.frame).padding(horizontal = 5.dp, vertical = 3.dp)) {
+        Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
+            Text(s.label, style = TextStyle(color = if (s.tone == Tone.Muted) c.muted else c.text, fontSize = Caption), maxLines = 1)
+            Spacer(GlanceModifier.defaultWeight())
+            Text(s.value, style = TextStyle(color = valueColour, fontSize = Value, fontWeight = FontWeight.Bold), maxLines = 1)
+            if (s.tag.isNotEmpty()) {
+                Spacer(GlanceModifier.width(2.dp))
+                Text(s.tag.uppercase(), style = TextStyle(color = c.muted, fontSize = 8.sp), maxLines = 1)
+            }
+        }
+        Spacer(GlanceModifier.height(2.dp))
+        s.spark?.let { Spark(it, c, GlanceModifier.fillMaxWidth().height(18.dp)) } ?: Spacer(GlanceModifier.height(18.dp))
+    }
+}
+
+/** A price line: its layers stacked, each tinted with its colour. */
+@Composable
+private fun Spark(sp: WidgetSpark, c: Colours, modifier: GlanceModifier) {
+    val layers = sparkLayers(sp) ?: return Spacer(modifier)
+    Box(modifier) {
+        @Composable
+        fun layer(b: android.graphics.Bitmap, colour: ColorProvider) =
+            Image(ImageProvider(b), null, GlanceModifier.fillMaxSize(), contentScale = ContentScale.FillBounds, colorFilter = ColorFilter.tint(colour))
+        layers.base?.let { layer(it, c.line(Tone.None, 0.5f)) }
+        layer(layers.points, c.line(sp.tone, if (sp.faded) 0.55f else 1f))
+        layers.ext?.let { layer(it, c.line(sp.extTone)) }
+    }
+}
+
+/** A bar stat on one line: its label, a bar filled to its level, then its value. */
+@Composable
+private fun BarLine(s: WidgetStat, c: Colours) {
+    Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text(s.label, style = TextStyle(color = c.muted, fontSize = Caption), maxLines = 1)
+        Spacer(GlanceModifier.width(6.dp))
+        Box(GlanceModifier.defaultWeight().height(5.dp).background(c.frame)) {
+            Image(ImageProvider(barFill(s.level)), null, GlanceModifier.fillMaxSize(), contentScale = ContentScale.FillBounds, colorFilter = ColorFilter.tint(c.barFill(s.tone)))
+        }
+        Spacer(GlanceModifier.width(6.dp))
+        Text(s.value, style = TextStyle(color = c.tone(s.tone), fontSize = Caption), maxLines = 1)
+    }
+}
+
+/**
+ * A row on one slim line, as the app's ultra compact rows: each stat's
+ * label then its value (or brief), chips underlined, a small price line
+ * after a watchlist chip's value; what doesn't fit is counted as "+n".
+ */
+@Composable
+private fun SlimLine(row: WidgetRow, inner: Dp, c: Colours) {
+    val gap = if (row.chips) 6f else 14f
+    val sparkW = 34f
+    // A widget's row holds ten things at most: nine stats and the count.
+    val fit = slimFit(row.stats, inner.value, gap) { if (row.chips && !it.lead && it.spark != null) sparkW + 4f else 0f }
+        .coerceIn(1, if (row.stats.size > MaxChildren) MaxChildren - 1 else MaxChildren)
+    Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        for ((i, s) in row.stats.take(fit).withIndex()) {
+            val value = s.brief ?: s.value
+            val chip = row.chips && !s.lead
+            val labelColour = if (row.chips && s.tone != Tone.Muted) c.text else c.muted
+            val valueColour = if (coloured(s.tone) || !row.chips) c.tone(s.tone) else if (s.tone == Tone.Muted) c.muted else c.text
+            // Each as wide as its text is guessed to be: a widget can't size an
+            // underline to its text otherwise.
+            val w = slimWidth(s) + if (chip && s.spark != null) sparkW + 4f else 0f
+            val lead = if (i > 0) gap else 0f
+            Column(GlanceModifier.width((w + lead).dp).padding(start = lead.dp)) {
+                Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
+                    if (s.label.isNotEmpty()) Text(s.label, style = TextStyle(color = labelColour, fontSize = Caption), maxLines = 1)
+                    if (s.label.isNotEmpty() && value.isNotEmpty()) Spacer(GlanceModifier.width(4.dp))
+                    if (value.isNotEmpty()) Text(value, style = TextStyle(color = valueColour, fontSize = Value, fontWeight = FontWeight.Bold), maxLines = 1)
+                    if (s.tag.isNotEmpty()) Text(" " + s.tag.uppercase(), style = TextStyle(color = c.muted, fontSize = 8.sp), maxLines = 1)
+                    if (chip && s.spark != null) {
+                        Spacer(GlanceModifier.width(4.dp))
+                        Spark(s.spark, c, GlanceModifier.width(sparkW.dp).height(12.dp))
+                    }
+                }
+                if (chip) Box(GlanceModifier.fillMaxWidth().height(2.dp).background(c.underline(s.tone))) {}
+            }
+        }
+        if (fit < row.stats.size) {
+            Text("+${row.stats.size - fit}", style = TextStyle(color = c.muted, fontSize = Caption), maxLines = 1, modifier = GlanceModifier.padding(start = 6.dp))
+        }
     }
 }

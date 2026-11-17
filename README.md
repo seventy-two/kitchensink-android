@@ -67,7 +67,15 @@ for all three.
   phone does. Settings has a button to stop Android putting it to sleep to
   save battery.
 - **Home screen widget**: each monitor's summary in panel order, as chips
-  or tiles like the compact rows, scrolling when there are more than fit,
+  or tiles like the compact rows, drawn as the app draws them: chips
+  underlined in their tone's colour, watchlist chips with their price
+  lines and tags, a lead chip as plain text, bars for stats marked bar, and
+  the rows the app shows as ultra compact as slim lines with a "+n" for what
+  doesn't fit. A widget can't draw lines or measure text, so price lines
+  and bars are small bitmaps tinted with the theme's colours (they still
+  follow the launcher's day and night), underlines are thin boxes, and a
+  slim line's widths are guessed from its text. It scrolls when there are
+  more rows than fit,
   in the app's theme. The app redraws it whenever the dashboard changes, so
   it's live while the background connection is on; otherwise it shows the
   last it heard, with how long ago. It leaves out private figures while

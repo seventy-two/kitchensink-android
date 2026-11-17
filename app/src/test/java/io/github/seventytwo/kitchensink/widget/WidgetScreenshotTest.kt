@@ -67,6 +67,18 @@ class WidgetScreenshotTest {
     @Test
     fun retroNarrow() = shot("retro-narrow", configured.copy(theme = ThemeChoice.Retro), w = 200, h = 300)
 
+    // Ultra compact rows (the stocks kept compact), as the app shows them.
+    @Test @Robo(qualifiers = "+night")
+    fun ultra() = shot(
+        "ultra",
+        configured.copy(layout = io.github.seventytwo.kitchensink.data.LayoutChoice.Ultra, rowStyle = mapOf("stocks" to "normal")),
+        h = 520,
+    )
+
+    // A big widget on the comics tablet's home screen.
+    @Test @Robo(qualifiers = "w800dp-h1280dp-port-night-xhdpi")
+    fun tablet() = shot("tablet", w = 560, h = 640)
+
     @Test
     fun notSetUp() = shot("not-set-up", Config(), h = 160)
 }

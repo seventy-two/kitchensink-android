@@ -3,10 +3,13 @@ package io.github.seventytwo.kitchensink.widget
 import io.github.seventytwo.kitchensink.data.Config
 import io.github.seventytwo.kitchensink.data.ThemeChoice
 import io.github.seventytwo.kitchensink.model.Snapshot
+import io.github.seventytwo.kitchensink.model.Spark
 import io.github.seventytwo.kitchensink.model.Stat
 import io.github.seventytwo.kitchensink.model.Tone
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class WidgetDataTest {
@@ -59,5 +62,39 @@ class WidgetDataTest {
         assertEquals(2, statsPerLine(2, 316f, 72f, 4f))
         assertEquals(1, statsPerLine(3, 50f, 72f, 4f))
         assertEquals(1, statsPerLine(0, 316f, 72f, 4f))
+    }
+
+    @Test
+    fun carriesChipsExtrasAndSlimRows() {
+        val s = Snapshot(
+            monitor = "stocks", summaryStyle = "chips",
+            summary = listOf(
+                Stat("Today", "£1", lead = true),
+                Stat("ACME", "-1%", tone = Tone.Bad, tag = "pre", spark = Spark(listOf(1f, 2f), base = 1f)),
+                Stat("Week", "31%", bar = true, level = 0.31f),
+                Stat("Halloumi", "Monday", brief = ""),
+                Stat("Odd", "1", spark = Spark(listOf(1f))),
+            ),
+        )
+        val c = configured.copy(layout = io.github.seventytwo.kitchensink.data.LayoutChoice.Ultra)
+        val row = widgetData(listOf(s), c).rows[0]
+        assertTrue(row.slim)
+        assertTrue(row.stats[0].lead)
+        assertEquals(WidgetSpark(listOf(1f, 2f), base = 1f), row.stats[1].spark)
+        assertEquals("pre", row.stats[1].tag)
+        assertTrue(row.stats[2].bar)
+        assertEquals(0.31f, row.stats[2].level)
+        assertEquals("", row.stats[3].brief)
+        assertNull(row.stats[4].spark) // one point isn't a line
+        assertFalse(widgetData(listOf(s), c.withRowStyle("stocks", false)).rows[0].slim)
+    }
+
+    @Test
+    fun fitsASlimLine() {
+        val stats = List(5) { WidgetStat("AB", "12") } // 2*6.5 + 4 + 2*9.5 + 4 = 40 each
+        assertEquals(5, slimFit(stats, 500f, 6f))
+        // Two (40 + 6 + 40) fit in 110dp with room for a "+3" (24); in 100 only one.
+        assertEquals(2, slimFit(stats, 110f, 6f))
+        assertEquals(1, slimFit(stats, 100f, 6f))
     }
 }
