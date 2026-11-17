@@ -58,9 +58,11 @@ data class ChipSpacing(
  * wide, though a chip whose label or value wouldn't fit keeps its own
  * width; if labels or values would still be cut short, they flow onto more
  * lines. A lead chip is as wide as its label and value, with more room
- * after it. A port of the Windows client's App::chips.
+ * after it. As a [grid] (a panel's charts), they take as many columns as
+ * fit at the shared width, stretched to fill the line. A port of the
+ * Windows client's App::chips.
  */
-fun layoutChips(ms: List<ChipMeasure>, width: Float, sp: ChipSpacing): ChipLayout {
+fun layoutChips(ms: List<ChipMeasure>, width: Float, sp: ChipSpacing, grid: Boolean = false): ChipLayout {
     val n = ms.size
     if (n == 0) return ChipLayout(emptyList(), emptyList(), emptyList(), emptyList(), 0f, 0f, 0f, 0f, 0f)
     val padX = sp.padX
@@ -119,7 +121,7 @@ fun layoutChips(ms: List<ChipMeasure>, width: Float, sp: ChipSpacing): ChipLayou
     val oneRow = if (shared > 0) (width - gaps - fixed) / shared else width
     val ws = MutableList(n) { if (own[it] > 0) own[it] else minOf(w, width) }
     val natural = gaps + ws.sum()
-    if (natural > width + 0.5f && shared > 0 && oneRow >= sp.minShare) {
+    if (!grid && natural > width + 0.5f && shared > 0 && oneRow >= sp.minShare) {
         // All on one row: the chips that need more than an equal share take
         // it, and the rest share what's left.
         var share = oneRow
@@ -147,6 +149,17 @@ fun layoutChips(ms: List<ChipMeasure>, width: Float, sp: ChipSpacing): ChipLayou
     val xs = MutableList(n) { 0f }
     val ys = MutableList(n) { 0f }
     val starts = MutableList(n) { false }
+    if (grid) {
+        val cols = ((width + gap) / (w + gap)).toInt().coerceIn(1, n)
+        val tw = kotlin.math.floor((width - gap * (cols - 1)) / cols)
+        for (i in 0 until n) {
+            ws[i] = tw
+            starts[i] = i % cols == 0
+            xs[i] = (i % cols) * (tw + gap)
+            ys[i] = (i / cols) * (h + gap)
+        }
+        return ChipLayout(ws, xs, ys, starts, h, labelH, valueH, Math.round(iconSize).toFloat(), ys[n - 1] + h, sparks)
+    }
     var x = 0f
     var y = 0f
     for (i in 0 until n) {

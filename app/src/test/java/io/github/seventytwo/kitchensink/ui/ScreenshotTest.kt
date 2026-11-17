@@ -224,6 +224,26 @@ class ScreenshotTest {
         compose.onRoot().captureRoboImage("build/screenshots/bars.png")
     }
 
+    // A stats block of chips (the watchlist's charts), then switched to its month.
+    @Test @Robo(qualifiers = "w411dp-h891dp-port-xxhdpi")
+    fun chipsBlock() {
+        val stocks = snapshots.first { it.monitor == "stocks" }
+        compose.setContent {
+            Themed {
+                Box(Modifier.fillMaxSize().background(LocalPalette.current.bg).padding(16.dp)) {
+                    Box(Modifier.fillMaxWidth().background(LocalPalette.current.card).padding(12.dp)) {
+                        BlockView("stocks", stocks.blocks.first { it.chips })
+                    }
+                }
+            }
+        }
+        compose.waitForIdle()
+        compose.onRoot().captureRoboImage("build/screenshots/chips-block.png")
+        compose.onNodeWithText("1M").performClick()
+        compose.waitForIdle()
+        compose.onRoot().captureRoboImage("build/screenshots/chips-block-month.png")
+    }
+
     @Test @Robo(qualifiers = "w411dp-h891dp-port-xxhdpi")
     fun notSetUp() = shot("not-set-up", s = state(Config()).copy(conn = ConnState.NotConfigured, snapshots = emptyList()))
 

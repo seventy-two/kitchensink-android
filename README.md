@@ -15,7 +15,9 @@ for all three.
   `url` opens it when tapped. A stat marked `bar` is drawn as a bar
   filled to its `level`, in panels and summary tiles (in a tile, one line:
   label, bar, value, leaving out its detail); a summary of nothing but bars
-  shares the line between them. A `subtitleHover` subtitle (Windows shows
+  shares the line between them. A stats block marked `chips` is a grid of
+  chips (the open watchlist's charts), with buttons to switch between its
+  `views` (Today, 1W, 1M). A `subtitleHover` subtitle (Windows shows
   it on hover) is left out of the compact rows. A monitor that sends only
   a summary (no blocks) stays a row and never opens. The drawing follows
   the Windows client's.

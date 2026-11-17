@@ -27,7 +27,9 @@ import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -68,9 +70,11 @@ fun BlockView(monitor: String, b: Block) {
     val p = LocalPalette.current
     val mt = LocalMetrics.current
     Column(Modifier.fillMaxWidth()) {
-        if (b.title.isNotEmpty()) Text(b.title, style = mt.caption, color = p.blockTitle)
+        // A chips block puts its title on a line with its view buttons.
+        val chips = b.type == "stats" && b.chips
+        if (b.title.isNotEmpty() && !chips) Text(b.title, style = mt.caption, color = p.blockTitle)
         when (b.type) {
-            "stats" -> StatsBlock(b.stats)
+            "stats" -> if (chips) ChipsBlock(monitor, b) else StatsBlock(b.stats)
             "table" -> TableBlock(monitor, b)
             "list" -> ListBlock(b)
             "checklist" -> ChecklistBlock(monitor, b)
@@ -117,6 +121,38 @@ private fun StatsBlock(stats: List<Stat>) {
                 }
             }
         }
+    }
+}
+
+/**
+ * A stats block drawn as a grid of chips (the watchlist's charts) under its
+ * title, with buttons at the right of the title's line to switch every
+ * chip between its views (Today, 1W, 1M), remembered for the panel.
+ */
+@Composable
+private fun ChipsBlock(monitor: String, b: Block) {
+    val p = LocalPalette.current
+    val mt = LocalMetrics.current
+    var view by rememberSaveable(monitor) { mutableIntStateOf(0) }
+    if (view >= b.views.size) view = 0
+    Column(Modifier.fillMaxWidth()) {
+        if (b.title.isNotEmpty() || b.views.size > 1) {
+            Row(Modifier.fillMaxWidth().padding(bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(b.title, style = mt.caption, color = p.blockTitle, modifier = Modifier.weight(1f))
+                if (b.views.size > 1) {
+                    for ((i, v) in b.views.withIndex()) {
+                        // Small buttons, the chosen one filled.
+                        Box(
+                            Modifier.background(if (i == view) p.frame else Color.Transparent)
+                                .tappable { view = i }.padding(horizontal = 10.dp, vertical = 4.dp),
+                        ) {
+                            Text(v.label, style = mt.caption, color = if (i == view) p.text else p.muted)
+                        }
+                    }
+                }
+            }
+        }
+        Chips(if (b.views.isEmpty()) b.stats else b.views[view].stats, grid = true)
     }
 }
 

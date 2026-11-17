@@ -118,10 +118,11 @@ fun coloured(t: Tone) = t == Tone.Good || t == Tone.Bad || t == Tone.Warn || t =
  * tag small after the value, and the line under them. A lead chip is plain
  * text on one line. A stat's level is drawn faintly behind, joined to its
  * neighbours' as one chart, e.g. the chance of rain. Chips with a link
- * open it when tapped.
+ * open it when tapped. As a [grid] (a panel's charts) they fill the line
+ * in columns, with taller price lines.
  */
 @Composable
-fun Chips(stats: List<Stat>, modifier: Modifier = Modifier) {
+fun Chips(stats: List<Stat>, modifier: Modifier = Modifier, grid: Boolean = false) {
     val p = LocalPalette.current
     val mt = LocalMetrics.current
     val actions = LocalActions.current
@@ -132,14 +133,14 @@ fun Chips(stats: List<Stat>, modifier: Modifier = Modifier) {
         val sp = with(density) {
             ChipSpacing(
                 padX = 6.dp.toPx(), padY = 4.dp.toPx(), gap = 4.dp.toPx(), minShare = 44.dp.toPx(),
-                leadGap = 10.dp.toPx(), sparkH = 18.dp.roundToPx().toFloat(), sparkGap = 3.dp.roundToPx().toFloat(),
+                leadGap = 10.dp.toPx(), sparkH = (if (grid) 40 else 18).dp.roundToPx().toFloat(), sparkGap = 3.dp.roundToPx().toFloat(),
             )
         }
         val caption = mt.caption
         val value = mt.heading
         val tagStyle = caption.copy(fontSize = caption.fontSize * TagScale, lineHeight = caption.lineHeight * TagScale)
         fun tagW(s: Stat) = if (s.tag.isEmpty()) 0f else measurer.measure(tagText(s.tag), tagStyle, softWrap = false, maxLines = 1).size.width + sp.sparkGap
-        val layout = remember(stats, width, caption, value) {
+        val layout = remember(stats, width, caption, value, grid) {
             val ms = stats.map { s ->
                 val label = measureLines(measurer, s.label, caption)
                 val v = measurer.measure(s.value, value, softWrap = false, maxLines = 1)
@@ -157,7 +158,7 @@ fun Chips(stats: List<Stat>, modifier: Modifier = Modifier) {
                     tagW = tagW(s),
                 )
             }
-            layoutChips(ms, width, sp)
+            layoutChips(ms, width, sp, grid)
         }
         val px = sp.padX
         val py = sp.padY

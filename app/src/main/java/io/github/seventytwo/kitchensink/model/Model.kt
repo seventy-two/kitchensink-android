@@ -106,6 +106,9 @@ data class Item(
     val colour: Colour? = null,
 )
 
+/** One of a stats block's sets of stats, e.g. the watchlist's week. */
+data class StatsView(val label: String = "", val stats: List<Stat> = emptyList())
+
 /** One part of a monitor's panel. Only the fields for its type are set. */
 data class Block(
     val type: String = "",
@@ -127,6 +130,10 @@ data class Block(
     val buttons: Boolean = false,
     val isPrivate: Boolean = false,
     val stats: List<Stat> = emptyList(),
+    /** A stats block drawn as a grid of chips (the watchlist's charts). */
+    val chips: Boolean = false,
+    /** Other sets of a stats block's stats to switch between (Today, 1W, 1M); [stats] is the first's. */
+    val views: List<StatsView> = emptyList(),
     val columns: List<Column> = emptyList(),
     val rows: List<List<Cell>> = emptyList(),
     val items: List<Item> = emptyList(),
@@ -242,6 +249,8 @@ private fun parseBlock(e: JsonElement): Block {
         buttons = j.flag("buttons"),
         isPrivate = j.flag("private"),
         stats = j.array("stats").map(::parseStat),
+        chips = j.flag("chips"),
+        views = j.array("views").map { v -> v.obj().let { StatsView(it.str("label"), it.array("stats").map(::parseStat)) } },
         columns = j.array("columns").map {
             val c = it.obj()
             val align = when (c.str("align")) {

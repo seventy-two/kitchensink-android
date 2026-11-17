@@ -68,4 +68,14 @@ class ChipsTest {
         // The value's line, then the price line under it.
         assertEquals(4f * 2 + 14f + 3f + 18f, l.height)
     }
+
+    @Test
+    fun gridsFillTheLine() {
+        // 52 wide chips in 200: three columns, stretched to (200 - 8) / 3 = 64.
+        val l = layoutChips(List(5) { chip(40f, 30f) }, 200f, sp, grid = true)
+        assertEquals(List(5) { 64f }, l.widths)
+        assertEquals(listOf(0f, 68f, 136f, 0f, 68f), l.x)
+        assertEquals(listOf(true, false, false, true, false), l.rowStart)
+        assertEquals(2 * l.height + 4f, l.total)
+    }
 }
