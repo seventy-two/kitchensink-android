@@ -188,12 +188,17 @@ fun SettingsScreen(
             }
             toggle("Dim when idle", draft.oled.dim, "after ten minutes without a touch or key press") { v -> care { it.copy(dim = v) } }
             toggle("Swap sides", draft.oled.swap, "moves the Recent column across every other hour") { v -> care { it.copy(swap = v) } }
-            heading("")
+            heading("Layout")
+            toggle(
+                "Order by what's new", draft.relevance,
+                "a panel with something new in the last two hours, or that matters now, rises; one with nothing new for 12 hours sinks and fades",
+            ) { draft = draft.copy(relevance = it) }
             toggle("Cat", draft.cat, "a black cat asleep above the Recent column") { draft = draft.copy(cat = it) }
 
             if (panels.isNotEmpty()) {
                 heading("Panel order")
-                val order = orderedPanels(panels, draft).map { it.monitor }
+                // The user's own order, before any by what's new.
+                val order = orderedPanels(panels, draft.copy(relevance = false)).map { it.monitor }
                 val titles = panels.associate { it.monitor to it.title.ifEmpty { it.monitor } }
                 for ((i, id) in order.withIndex()) {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {

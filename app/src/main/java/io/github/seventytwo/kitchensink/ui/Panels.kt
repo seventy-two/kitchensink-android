@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalDensity
@@ -173,7 +174,8 @@ private class Measured {
 /**
  * Fills the space with one row per monitor, full width so the summaries
  * line up, opening as many full panels as fit [viewport] whole (see
- * fitPanels). Tapping a row opens or closes it, and [onPin] keeps that
+ * fitPanels). Stale panels, with nothing new for a long while, fade and
+ * don't open by themselves. Tapping a row opens or closes it, and [onPin] keeps that
  * choice while it differs from what would happen by itself; the column
  * scrolls if open panels run past the screen.
  */
@@ -181,6 +183,7 @@ private class Measured {
 fun CompactPanels(
     panels: List<Snapshot>,
     pins: Map<String, Pin>,
+    stale: Set<String>,
     viewport: Dp,
     onPin: (String, Pin) -> Unit,
     modifier: Modifier = Modifier,
@@ -202,10 +205,14 @@ fun CompactPanels(
         val w = constraints.maxWidth
         val cw = Constraints(minWidth = w, maxWidth = w)
         // Each monitor measured each way at this width.
-        val rows = panels.mapIndexed { i, s -> subcompose(s.monitor + "#row") { CompactCard(s, Show.Row) { tapped(i) } }.first().measure(cw) }
+        val rows = panels.mapIndexed { i, s ->
+            subcompose(s.monitor + "#row") {
+                Box(if (s.monitor in stale) Modifier.alpha(StaleAlpha) else Modifier) { CompactCard(s, Show.Row) { tapped(i) } }
+            }.first().measure(cw)
+        }
         val fulls = panels.mapIndexed { i, s -> subcompose(s.monitor + "#full") { CompactCard(s, Show.Full) { tapped(i) } }.first().measure(cw) }
         val ps = panels.mapIndexed { i, s ->
-            Panel(rows[i].height.toFloat(), fulls[i].height.toFloat(), if (s.summaryOnly()) Pin.Closed else pins[s.monitor] ?: Pin.Auto)
+            Panel(rows[i].height.toFloat(), fulls[i].height.toFloat(), if (s.summaryOnly()) Pin.Closed else pins[s.monitor] ?: Pin.Auto, s.monitor in stale)
         }
         val fit = fitPanels(ps, heightPx, gapPx)
         measured.panels = ps
@@ -246,11 +253,14 @@ fun FullCard(s: Snapshot) {
     }
 }
 
-/** Full panels in columns about 440dp wide, each going in the shortest column so far. */
+/** How much a stale panel fades. */
+private const val StaleAlpha = 0.5f
+
+/** Full panels in columns about 440dp wide, each going in the shortest column so far; stale ones fade. */
 @Composable
-fun MasonryPanels(panels: List<Snapshot>, modifier: Modifier = Modifier) {
+fun MasonryPanels(panels: List<Snapshot>, stale: Set<String>, modifier: Modifier = Modifier) {
     val gap = LocalMetrics.current.gap
-    Layout(content = { for (s in panels) Box { FullCard(s) } }, modifier = modifier) { measurables, constraints ->
+    Layout(content = { for (s in panels) Box(if (s.monitor in stale) Modifier.alpha(StaleAlpha) else Modifier) { FullCard(s) } }, modifier = modifier) { measurables, constraints ->
         val g = gap.roundToPx()
         val width = constraints.maxWidth
         val cols = maxOf(1, (width + g) / (440.dp.roundToPx() + g)).coerceAtMost(maxOf(1, measurables.size))

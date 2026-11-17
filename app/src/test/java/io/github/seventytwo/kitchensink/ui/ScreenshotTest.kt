@@ -87,6 +87,21 @@ class ScreenshotTest {
         s = state(configured.copy(expanded = setOf("weather"), collapsed = setOf("calendar"), hidePrivate = true)),
     )
 
+    // Ordered by what's new: weather had an event ten minutes ago, so it
+    // rises; the calendar and OSRS have had nothing new for a day, so they
+    // sink and fade.
+    @Test @Robo(qualifiers = "w411dp-h891dp-port-xxhdpi")
+    fun phonePortraitNews() = shot(
+        "phone-portrait-news",
+        s = state().copy(
+            news = mapOf(
+                "weather" to io.github.seventytwo.kitchensink.model.News(event = now - 600),
+                "calendar" to io.github.seventytwo.kitchensink.model.News(changed = now - 86400),
+                "osrs" to io.github.seventytwo.kitchensink.model.News(changed = now - 86400),
+            ),
+        ),
+    )
+
     @Test @Robo(qualifiers = "w891dp-h411dp-land-xxhdpi")
     fun phoneLandscape() = shot("phone-landscape", s = state(configured.copy(cat = true)))
 

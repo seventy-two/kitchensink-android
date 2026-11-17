@@ -146,6 +146,7 @@ class MainActivity : ComponentActivity() {
         val refreshing by hub.refreshing.collectAsStateWithLifecycle()
         val ticked by hub.ticked.collectAsStateWithLifecycle()
         val wakeUntil by hub.wakeUntil.collectAsStateWithLifecycle()
+        val news by hub.news.collectAsStateWithLifecycle()
         val drafts = remember { mutableStateMapOf<String, String>() }
         // Ago times, OLED care's moves and dimming go by the clock.
         val time by produceState(now()) {
@@ -250,7 +251,7 @@ class MainActivity : ComponentActivity() {
                         DashboardScreen(
                             ScreenState(
                                 config, snapshots, events, conn, error, time, lastActivity.longValue, wakeUntil,
-                                tv = tv, overscan = tv && isTvDevice,
+                                tv = tv, overscan = tv && isTvDevice, news = news,
                                 clock = { (SystemClock.elapsedRealtime() - started) / 1000.0 },
                             ),
                             callbacks,

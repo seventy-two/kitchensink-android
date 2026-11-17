@@ -28,6 +28,15 @@ for all three.
   to open or close it yourself, and the column scrolls if it runs past the
   screen. Tall, wide screens (from about 840 x 900 dp)
   show every full panel in columns instead.
+- **Order by what's new** (settings, on by default): a panel the server
+  says matters now (a game on, an appointment soon) or that had an event
+  in the last two hours rises to the top; one with neither an event nor a
+  change to its summary for 12 hours sinks to the bottom, fades and doesn't
+  open by itself (tap it to). A panel the server marks `calm` (Reddit,
+  whose hot posts always turn over) doesn't count summary changes: it stays
+  at the bottom unless it matters now or had an event in the last 12
+  hours. Each keeps the set order among its own. When each monitor last
+  had something new is kept in `news.json`, as on Windows.
 - **Portrait and landscape**: from 720 dp wide, Recent is a column beside
   the panels; narrower, the panels and Recent are two pages, swiped between,
   with a dot on Recent's tab for anything new.

@@ -9,6 +9,9 @@ import io.github.seventytwo.kitchensink.data.Config
 import io.github.seventytwo.kitchensink.data.ConfigStore
 import io.github.seventytwo.kitchensink.model.Dashboard
 import io.github.seventytwo.kitchensink.model.Event
+import io.github.seventytwo.kitchensink.model.News
+import io.github.seventytwo.kitchensink.model.noteEvent
+import io.github.seventytwo.kitchensink.model.noteSummary
 import io.github.seventytwo.kitchensink.model.Snapshot
 import io.github.seventytwo.kitchensink.net.ConnState
 import io.github.seventytwo.kitchensink.net.Inbound
@@ -61,6 +64,12 @@ class Hub(private val context: Context, private val store: ConfigStore, http: Ok
     private val _ticked = MutableStateFlow<Map<String, Boolean>>(emptyMap())
     val ticked: StateFlow<Map<String, Boolean>> = _ticked
 
+    /** When each monitor last had something new, for ordering panels by relevance. */
+    private val _news = MutableStateFlow(store.loadNews())
+    val news: StateFlow<Map<String, News>> = _news
+    private var newsDirty = false
+    private var newsSaved = 0L
+
     /** Until when something new keeps an idle screen from dimming (Unix seconds). */
     private val _wakeUntil = MutableStateFlow(0L)
     val wakeUntil: StateFlow<Long> = _wakeUntil
@@ -83,6 +92,9 @@ class Hub(private val context: Context, private val store: ConfigStore, http: Ok
             while (true) {
                 delay(60_000)
                 if (dashboard.dropOver(System.currentTimeMillis() / 1000)) publish()
+                // What's new is saved now and then, not on every change (the
+                // watchlist's figures change every minute).
+                if (newsDirty && SystemClock.elapsedRealtime() - newsSaved > 5 * 60_000) saveNews()
             }
         }
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
@@ -95,6 +107,7 @@ class Hub(private val context: Context, private val store: ConfigStore, http: Ok
 
             override fun onStop(owner: LifecycleOwner) {
                 foreground = false
+                if (newsDirty) saveNews()
                 // Without the background service, let go of the connection
                 // a little after leaving, so a quick switch away and back
                 // doesn't reconnect.
@@ -127,10 +140,12 @@ class Hub(private val context: Context, private val store: ConfigStore, http: Ok
                 _refreshing.value -= m.snapshot.monitor
                 val prefix = m.snapshot.monitor + "/"
                 if (_ticked.value.keys.any { it.startsWith(prefix) }) _ticked.value = _ticked.value.filterKeys { !it.startsWith(prefix) }
+                noteNews(noteSummary(_news.value, m.snapshot, System.currentTimeMillis() / 1000))
                 dashboard.applySnapshot(m.snapshot)
             }
             is Inbound.Ev -> {
                 val e = m.event
+                noteNews(noteEvent(_news.value, e))
                 if (!dashboard.addEvent(e)) return
                 // History from before the app started has already been seen
                 // (or missed for good); events missed while offline are new.
@@ -140,6 +155,18 @@ class Hub(private val context: Context, private val store: ConfigStore, http: Ok
                 if (!foreground && c.notify && e.priority >= c.minPriority) notifier.hold(e) { dashboard.titleOf(it) }
             }
         }
+    }
+
+    private fun noteNews(n: Map<String, News>) {
+        if (n === _news.value) return
+        _news.value = n
+        newsDirty = true
+    }
+
+    private fun saveNews() {
+        store.saveNews(_news.value)
+        newsDirty = false
+        newsSaved = SystemClock.elapsedRealtime()
     }
 
     private fun publish() {

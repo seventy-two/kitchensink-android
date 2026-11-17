@@ -44,6 +44,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.seventytwo.kitchensink.data.Config
 import io.github.seventytwo.kitchensink.model.Event
+import io.github.seventytwo.kitchensink.model.News
+import io.github.seventytwo.kitchensink.model.Tier
+import io.github.seventytwo.kitchensink.model.byTier
+import io.github.seventytwo.kitchensink.model.panelTier
 import io.github.seventytwo.kitchensink.model.Pin
 import io.github.seventytwo.kitchensink.model.Snapshot
 import io.github.seventytwo.kitchensink.model.arrange
@@ -79,6 +83,8 @@ data class ScreenState(
     val overscan: Boolean = false,
     /** Seconds since start, for the cat. */
     val clock: () -> Double = { 0.0 },
+    /** When each monitor last had something new, for ordering panels by it. */
+    val news: Map<String, News> = emptyMap(),
 )
 
 /** What the dashboard can ask of the app, besides [Actions]. */
@@ -100,15 +106,26 @@ interface ScreenCallbacks {
     }
 }
 
-/** The panels in the user's order, private figures left out if they're hidden. */
-fun orderedPanels(snapshots: List<Snapshot>, config: Config): List<Snapshot> {
+/**
+ * The panels in the user's order, private figures left out if they're
+ * hidden. Ordering by what's new (given [news] at [now]), what had
+ * something new lately rises and what's had nothing new for a long while
+ * sinks, each keeping the user's order among its own.
+ */
+fun orderedPanels(snapshots: List<Snapshot>, config: Config, news: Map<String, News> = emptyMap(), now: Long = 0): List<Snapshot> {
     // Background monitors feed other panels; the settings show them.
     val panels = snapshots.filter { !it.background }
     val shown = if (config.hidePrivate) panels.map { it.withoutPrivate() } else panels
-    if (config.order.isEmpty()) return shown
     val byId = shown.associateBy { it.monitor }
-    return arrange(shown.map { it.monitor }, config.order).mapNotNull { byId[it] }
+    val arranged = if (config.order.isEmpty()) shown else arrange(shown.map { it.monitor }, config.order).mapNotNull { byId[it] }
+    if (!config.relevance) return arranged
+    return byTier(arranged) { panelTier(it, news[it.monitor] ?: News(), now) }
 }
+
+/** The monitors whose panels have had nothing new for a long while: they fade and don't open by themselves. */
+fun stalePanels(panels: List<Snapshot>, config: Config, news: Map<String, News>, now: Long): Set<String> =
+    if (!config.relevance) emptySet()
+    else panels.filter { panelTier(it, news[it.monitor] ?: News(), now) == Tier.Stale }.map { it.monitor }.toSet()
 
 @Composable
 fun DashboardScreen(state: ScreenState, cb: ScreenCallbacks) {
@@ -228,7 +245,8 @@ private fun Body(state: ScreenState, cb: ScreenCallbacks, compact: Boolean) {
             return Empty(if (offline) "Can't reach the server." else "Connecting…", if (offline) state.error else "", offline, cb)
         }
     }
-    val panels = orderedPanels(state.snapshots, c)
+    val panels = orderedPanels(state.snapshots, c, state.news, state.now)
+    val stale = stalePanels(panels, c, state.news, state.now)
     val pins = buildMap {
         c.collapsed.forEach { put(it, Pin.Closed) }
         c.expanded.forEach { put(it, Pin.Open) }
@@ -246,11 +264,11 @@ private fun Body(state: ScreenState, cb: ScreenCallbacks, compact: Boolean) {
             val rest = if (lights == null) panels else panels.filter { it.monitor != lights.monitor }
             Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(gap)) {
                 if (feedFirst) FeedColumn(state, cb, Modifier.width(feedW), lights = lights)
-                PanelsColumn(rest, pins, compact, height, cb, Modifier.weight(1f))
+                PanelsColumn(rest, pins, stale, compact, height, cb, Modifier.weight(1f))
                 if (!feedFirst) FeedColumn(state, cb, Modifier.width(feedW), lights = lights)
             }
         } else {
-            Pages(state, cb, panels, pins, compact, height)
+            Pages(state, cb, panels, pins, stale, compact, height)
         }
     }
 }
@@ -265,17 +283,21 @@ private fun FeedColumn(state: ScreenState, cb: ScreenCallbacks, modifier: Modifi
 }
 
 @Composable
-private fun PanelsColumn(panels: List<Snapshot>, pins: Map<String, Pin>, compact: Boolean, height: Dp, cb: ScreenCallbacks, modifier: Modifier) {
+private fun PanelsColumn(
+    panels: List<Snapshot>, pins: Map<String, Pin>, stale: Set<String>, compact: Boolean, height: Dp, cb: ScreenCallbacks, modifier: Modifier,
+) {
     val scroll = rememberScrollState()
     Box(modifier.verticalScroll(scroll)) {
-        if (compact) CompactPanels(panels, pins, height, cb::pin, Modifier.fillMaxWidth())
-        else MasonryPanels(panels, Modifier.fillMaxWidth())
+        if (compact) CompactPanels(panels, pins, stale, height, cb::pin, Modifier.fillMaxWidth())
+        else MasonryPanels(panels, stale, Modifier.fillMaxWidth())
     }
 }
 
 /** On a narrow screen, the panels and Recent are pages side by side, swiped between or picked by their tabs. */
 @Composable
-private fun Pages(state: ScreenState, cb: ScreenCallbacks, panels: List<Snapshot>, pins: Map<String, Pin>, compact: Boolean, height: Dp) {
+private fun Pages(
+    state: ScreenState, cb: ScreenCallbacks, panels: List<Snapshot>, pins: Map<String, Pin>, stale: Set<String>, compact: Boolean, height: Dp,
+) {
     val p = LocalPalette.current
     val mt = LocalMetrics.current
     val pager = rememberPagerState { 2 }
@@ -303,7 +325,7 @@ private fun Pages(state: ScreenState, cb: ScreenCallbacks, panels: List<Snapshot
         }
         Spacer(Modifier.height(6.dp))
         HorizontalPager(pager, Modifier.weight(1f).fillMaxWidth(), pageSpacing = 16.dp, beyondViewportPageCount = 1) { page ->
-            if (page == 0) PanelsColumn(panels, pins, compact, height - tabH - 6.dp, cb, Modifier.fillMaxSize())
+            if (page == 0) PanelsColumn(panels, pins, stale, compact, height - tabH - 6.dp, cb, Modifier.fillMaxSize())
             else FeedColumn(state, cb, Modifier.fillMaxSize(), heading = false)
         }
     }

@@ -8,6 +8,7 @@ import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
 import io.github.seventytwo.kitchensink.model.Cleared
+import io.github.seventytwo.kitchensink.model.News
 import io.github.seventytwo.kitchensink.model.Priority
 import java.io.File
 import java.security.KeyStore
@@ -64,6 +65,8 @@ data class Config(
     /** TV mode: an always-on dashboard for a TV or a screen on the wall. Auto is on for Android TV. */
     val tv: TvMode = TvMode.Auto,
     val theme: ThemeChoice = ThemeChoice.System,
+    /** Panels with something new rise to the top; ones with nothing new for a long while sink, fade and don't open by themselves. */
+    val relevance: Boolean = true,
 ) {
     val cleared: Cleared get() = Cleared(clearedThrough, clearedIds.toSet())
     fun withCleared(c: Cleared) = copy(clearedThrough = c.through, clearedIds = c.ids.sorted())
@@ -73,6 +76,7 @@ data class Config(
 /** Reads and writes [Config]. */
 class ConfigStore(context: Context) {
     private val file = File(context.filesDir, "config.json")
+    private val newsFile = File(context.filesDir, "news.json")
     private val format = Json { ignoreUnknownKeys = true; encodeDefaults = true; prettyPrint = true }
 
     /** The settings, with defaults for anything missing or unreadable. */
@@ -90,6 +94,22 @@ class ConfigStore(context: Context) {
         val tmp = File(file.path + ".tmp")
         tmp.writeText(format.encodeToString(Config.serializer(), c.copy(tokenSealed = sealed)))
         tmp.renameTo(file)
+    }
+
+    /**
+     * When each monitor last had something new, for ordering panels. It's
+     * kept apart from the settings as it changes all day.
+     */
+    fun loadNews(): Map<String, News> = try {
+        format.decodeFromString<Map<String, News>>(newsFile.readText())
+    } catch (_: Exception) {
+        emptyMap()
+    }
+
+    fun saveNews(news: Map<String, News>) {
+        val tmp = File(newsFile.path + ".tmp")
+        tmp.writeText(format.encodeToString(news))
+        tmp.renameTo(newsFile)
     }
 
     private fun key(): SecretKey {

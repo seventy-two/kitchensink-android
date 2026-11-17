@@ -25,6 +25,13 @@ class LayoutTest {
         p[0] = p[0].copy(pin = Pin.Closed)
         p[1] = p[1].copy(pin = Pin.Open)
         assertEquals("rFrr", shows(fitPanels(p, 500f, 10f)))
+        // Stale panels don't open by themselves, but a pin still opens one.
+        val q = mutableListOf(Panel(50f, 150f, stale = true), Panel(50f, 100f), Panel(50f, 80f))
+        assertEquals("rFF", shows(fitPanels(q, 2000f, 10f)))
+        q[2] = q[2].copy(stale = true)
+        assertEquals("rFr", shows(fitPanels(q, 250f, 10f)))
+        q[0] = q[0].copy(pin = Pin.Open)
+        assertEquals("FFr", shows(fitPanels(q, 2000f, 10f)))
         // Unmeasured panels stay as rows.
         assertEquals("rF", shows(fitPanels(listOf(Panel(50f, 0f), Panel(50f, 100f)), 2000f, 10f)))
     }

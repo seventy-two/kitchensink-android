@@ -153,6 +153,11 @@ data class Snapshot(
     val subtitleHover: Boolean = false,
     /** When it was updated matters at the moment. */
     val timely: Boolean = false,
+    /** When the panel matters most (Unix seconds; from 0 for now, until exclusive, 0 for never); see [relevant]. */
+    val relevantFrom: Long = 0,
+    val relevantUntil: Long = 0,
+    /** A change to its summary isn't news (Reddit's hot posts turning over), so only being relevant or an event lifts it. */
+    val calm: Boolean = false,
     /** It only feeds other panels (the mail reader), so it's shown in the settings, not the dashboard. */
     val background: Boolean = false,
     /** Unix seconds; 0 if never polled. */
@@ -305,6 +310,9 @@ fun parseSnapshot(e: JsonElement): Snapshot {
         subtitle = j.str("subtitle"),
         subtitleHover = j.flag("subtitleHover"),
         timely = j.flag("timely"),
+        relevantFrom = (j["relevant"] as? JsonObject)?.let { maxOf(0, parseTime(it.str("from"))) } ?: 0,
+        relevantUntil = (j["relevant"] as? JsonObject)?.let { maxOf(0, parseTime(it.str("until"))) } ?: 0,
+        calm = j.flag("calm"),
         background = j.flag("background"),
         // Go sends its zero time, year 1, for a monitor that hasn't polled yet.
         updated = maxOf(0, parseTime(j.str("updated"))),
@@ -355,6 +363,9 @@ fun ago(then: Long, now: Long): String {
         else -> "${s / 86400}d ago"
     }
 }
+
+/** Whether the server says a snapshot's panel matters most at [now] (a game on, an appointment soon). */
+fun Snapshot.relevant(now: Long): Boolean = relevantUntil > now && relevantFrom <= now
 
 /** Whether a monitor sends only a summary, no panel (Claude's limits): it stays a row and never opens. */
 fun Snapshot.summaryOnly(): Boolean = blocks.isEmpty() && summary.isNotEmpty() && error.isEmpty()

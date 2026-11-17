@@ -48,6 +48,8 @@ data class Panel(
     /** With its full panel; 0 if not measured. */
     val full: Float,
     val pin: Pin = Pin.Auto,
+    /** Nothing new for a long while (see panelTier): it never opens by itself, only by hand. */
+    val stale: Boolean = false,
 )
 
 data class Fit(val show: List<Show>)
@@ -55,7 +57,8 @@ data class Fit(val show: List<Show>)
 /**
  * Fills a column of [height] with panels, [gap] apart. Pinned ones are
  * open or closed as chosen; the rest open in order while they fit whole,
- * and stay rows when they don't.
+ * and stay rows when they don't. Stale panels are passed over: they open
+ * only when pinned.
  */
 fun fitPanels(panels: List<Panel>, height: Float, gap: Float): Fit {
     val show = MutableList(panels.size) { Show.Row }
@@ -66,7 +69,7 @@ fun fitPanels(panels: List<Panel>, height: Float, gap: Float): Fit {
         total += (if (open) p.full else p.row) + gap
     }
     for ((i, p) in panels.withIndex()) {
-        if (p.pin != Pin.Auto || p.full <= 0 || total - p.row + p.full > height) continue
+        if (p.pin != Pin.Auto || p.stale || p.full <= 0 || total - p.row + p.full > height) continue
         show[i] = Show.Full
         total += p.full - p.row
     }
