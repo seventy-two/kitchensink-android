@@ -38,6 +38,8 @@ data class Palette(
     /** The background, top to bottom; a gradient in the retro theme. */
     val bgTop: Color = bg,
     val bgBottom: Color = bg,
+    /** Rain in the weather (icons, chance-of-rain chart, wet hours): blue, as the accent is purple. */
+    val rain: Color = accent,
     /** Panels' bevel, lit along the top and left; the retro theme's. */
     val bevelLight: Color = border,
     val bevelDark: Color = border,
@@ -49,6 +51,7 @@ data class Palette(
         Tone.Warn -> warn
         Tone.Muted -> muted
         Tone.Accent -> accent
+        Tone.Rain -> rain
         Tone.None -> text
     }
 
@@ -57,11 +60,13 @@ data class Palette(
 
         val Dark = Palette(
             c(0x15171C), c(0x1E2128), c(0x2B2F38), c(0xE6E8EC), c(0x8C929D), c(0x3FB950),
-            c(0xF8645A), c(0xD9A23A), c(0x5AA8FF), c(0x2A2E37), c(0x262A33), c(0x22252D), true,
+            c(0xF8645A), c(0xD9A23A), c(0xA78BFA), c(0x2A2E37), c(0x262A33), c(0x22252D), true,
+            rain = c(0x5AA8FF),
         )
         val Light = Palette(
             c(0xF2F3F5), c(0xFFFFFF), c(0xE1E4E8), c(0x1F2328), c(0x656D76), c(0x1A7F37),
-            c(0xCF222E), c(0x9A6700), c(0x0969DA), c(0xEEF0F3), c(0xF0F3F6), c(0xF7F8FA), false,
+            c(0xCF222E), c(0x9A6700), c(0x8250DF), c(0xEEF0F3), c(0xF0F3F6), c(0xF7F8FA), false,
+            rain = c(0x0969DA),
         )
 
         /**
@@ -79,7 +84,8 @@ data class Palette(
         /** Pixels showing black are off on an OLED screen, and dimmer, fainter static parts wear it less. */
         val Oled = Palette(
             c(0x000000), c(0x0A0B0D), c(0x17191D), c(0xC4C8CF), c(0x6A707A), c(0x2E9A45),
-            c(0xD9534B), c(0xBF8A27), c(0x4A8AD4), c(0x131518), c(0x15171B), c(0x0E0F12), true,
+            c(0xD9534B), c(0xBF8A27), c(0x8A70D6), c(0x131518), c(0x15171B), c(0x0E0F12), true,
+            rain = c(0x4A8AD4),
         )
     }
 }

@@ -135,7 +135,7 @@ fun IconButtonSmall(
 
 fun Palette.iconColours(): IconColours {
     fun mix(a: Color, b: Color, k: Float) = Color(a.red + (b.red - a.red) * k, a.green + (b.green - a.green) * k, a.blue + (b.blue - a.blue) * k)
-    return IconColours(warn, text, mix(text, muted, 0.3f), mix(muted, frame, 0.2f), accent, text, warn)
+    return IconColours(warn, text, mix(text, muted, 0.3f), mix(muted, frame, 0.2f), rain, text, warn)
 }
 
 /** An eye, for showing and hiding private figures. */

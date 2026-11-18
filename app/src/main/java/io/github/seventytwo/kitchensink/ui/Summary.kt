@@ -109,7 +109,7 @@ fun DrawScope.drawSpark(s: Spark, at: Offset, size: Size, p: Palette) {
 }
 
 /** Whether a tone is drawn in its colour on a chip, rather than as plain text. */
-fun coloured(t: Tone) = t == Tone.Good || t == Tone.Bad || t == Tone.Warn || t == Tone.Accent
+fun coloured(t: Tone) = t == Tone.Good || t == Tone.Bad || t == Tone.Warn || t == Tone.Accent || t == Tone.Rain
 
 /**
  * Stats as small blocks, all one size so they line up; see [layoutChips].
@@ -231,14 +231,14 @@ fun Chips(stats: List<Stat>, modifier: Modifier = Modifier, grid: Boolean = fals
                         lineTo(ax + w, ay + h)
                         close()
                     }
-                    drawPath(fill, p.accent.copy(alpha = 0.13f))
+                    drawPath(fill, p.rain.copy(alpha = 0.13f))
                     // At 0% the line still shows, along the bottom.
                     val thick = 1.25f * density.density
                     val floor = ay + h - thick / 2
                     val line = Path().apply {
                         pts.forEachIndexed { k, o -> if (k == 0) moveTo(o.x, minOf(o.y, floor)) else lineTo(o.x, minOf(o.y, floor)) }
                     }
-                    drawPath(line, p.accent.copy(alpha = 0.5f), style = Stroke(thick))
+                    drawPath(line, p.rain.copy(alpha = 0.5f), style = Stroke(thick))
                 } else {
                     // No block: a line along the bottom in the tone's colour.
                     val t = 2.dp.roundToPx().toFloat()

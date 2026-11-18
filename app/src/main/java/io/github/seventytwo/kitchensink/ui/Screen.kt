@@ -194,7 +194,7 @@ private fun Header(state: ScreenState, cb: ScreenCallbacks, side: Dp) {
         Modifier.fillMaxWidth().height(if (mt.gap < 12.dp) 44.dp else 52.dp).then(band).padding(horizontal = side),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text("kitchensink", style = mt.title, color = p.heading)
+        Text("kitchensink", style = mt.title, color = if (p.retro) p.heading else p.accent)
         Spacer(Modifier.width(14.dp))
         Canvas(Modifier.size(8.dp)) { drawCircle(dot) }
         Spacer(Modifier.width(6.dp))

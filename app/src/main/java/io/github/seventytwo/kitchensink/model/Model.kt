@@ -14,7 +14,7 @@ import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.floatOrNull
 import kotlinx.serialization.json.longOrNull
 
-enum class Tone { None, Good, Bad, Warn, Muted, Accent }
+enum class Tone { None, Good, Bad, Warn, Muted, Accent, Rain }
 enum class Align { Left, Right, Center }
 enum class Priority { Low, Normal, High }
 
@@ -211,6 +211,7 @@ private fun toneNamed(t: String): Tone = when (t) {
     "warn" -> Tone.Warn
     "muted" -> Tone.Muted
     "accent" -> Tone.Accent
+    "rain" -> Tone.Rain
     else -> Tone.None
 }
 

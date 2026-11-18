@@ -120,7 +120,7 @@ internal fun widgetPalettes(theme: ThemeChoice, black: Boolean): Pair<Palette, P
     else -> Palette.Light to Palette.Dark
 }
 
-private fun coloured(t: Tone) = t == Tone.Good || t == Tone.Bad || t == Tone.Warn || t == Tone.Accent
+private fun coloured(t: Tone) = t == Tone.Good || t == Tone.Bad || t == Tone.Warn || t == Tone.Accent || t == Tone.Rain
 
 /** The palette's colours as Glance wants them, switching with the launcher's day and night. */
 internal class Colours(private val day: Palette, private val night: Palette) {
@@ -132,6 +132,7 @@ internal class Colours(private val day: Palette, private val night: Palette) {
     val text = of { it.text }
     val muted = of { it.muted }
     val heading = of { it.heading }
+    val title = of { if (it.retro) it.heading else it.accent }
     val warn = of { it.warn }
     fun tone(t: Tone) = of { it.tone(t) }
 
@@ -161,7 +162,7 @@ internal fun WidgetContent(data: WidgetData, now: Long, scroll: Boolean = true) 
     val pad = 8.dp
     Column(GlanceModifier.fillMaxSize().appWidgetBackground().background(c.bg).cornerRadius(16.dp).padding(horizontal = pad, vertical = 6.dp)) {
         Row(GlanceModifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp, bottom = 4.dp).clickable(open), verticalAlignment = Alignment.CenterVertically) {
-            Text("kitchensink", style = TextStyle(color = c.heading, fontSize = Value, fontWeight = FontWeight.Bold))
+            Text("kitchensink", style = TextStyle(color = c.title, fontSize = Value, fontWeight = FontWeight.Bold))
             Spacer(GlanceModifier.defaultWeight())
             if (data.updated > 0) Text(ago(data.updated, now), style = TextStyle(color = c.muted, fontSize = Caption), maxLines = 1)
         }
