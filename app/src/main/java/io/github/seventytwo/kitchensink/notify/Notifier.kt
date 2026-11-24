@@ -49,13 +49,22 @@ class Notifier(private val context: Context) {
         }
     }
 
+    /** Removes a sign-in code's notification (its code has expired). */
+    fun cancelCode(e: Event) {
+        manager.cancel(tagOf(listOf(e)), EVENT_ID)
+    }
+
     private fun flush() {
         if (pending.isEmpty()) return
-        val events = pending.toList()
+        val all = pending.toList()
         pending.clear()
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED &&
             Build.VERSION.SDK_INT >= 33
         ) return
+        // Sign-in codes are never folded into a burst: each gets its own.
+        val (codes, events) = all.partition { isCode(it) }
+        codes.forEach(::notifyCode)
+        if (events.isEmpty()) return
 
         val high = events.any { it.priority == Priority.High }
         val b = NotificationCompat.Builder(context, if (high) CHANNEL_HIGH else CHANNEL_EVENTS)
@@ -81,6 +90,43 @@ class Notifier(private val context: Context) {
         }
     }
 
+    /**
+     * A sign-in code from the codes monitor: the code shows only once the
+     * phone's unlocked (the lock screen says just who it's from), a Copy
+     * button puts it on the clipboard, and it goes when the code expires.
+     */
+    private fun notifyCode(e: Event) {
+        val tag = tagOf(listOf(e))
+        val copy = Intent(context, CopyCodeReceiver::class.java)
+            .putExtra(CopyCodeReceiver.EXTRA_CODE, e.body)
+            .putExtra(CopyCodeReceiver.EXTRA_TAG, tag)
+        val copyIntent = PendingIntent.getBroadcast(context, e.id.toInt(), copy, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val public = NotificationCompat.Builder(context, CHANNEL_HIGH)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(e.title)
+            .setContentText("Unlock to see the code")
+            .build()
+        val b = NotificationCompat.Builder(context, CHANNEL_HIGH)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setCategory(NotificationCompat.CATEGORY_MESSAGE)
+            .setContentTitle(e.title)
+            .setContentText(e.body)
+            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+            .setPublicVersion(public)
+            .setAutoCancel(true)
+            .setContentIntent(open(""))
+            .addAction(0, "Copy", copyIntent)
+        val left = e.expires * 1000 - System.currentTimeMillis()
+        if (e.expires > 0) {
+            if (left <= 0) return
+            b.setTimeoutAfter(left)
+        }
+        try {
+            manager.notify(tag, EVENT_ID, b.build())
+        } catch (_: SecurityException) {
+        }
+    }
+
     /** Opens an event's link, or the dashboard if it has none. */
     private fun open(url: String): PendingIntent {
         val intent = if (url.startsWith("https://") || url.startsWith("http://")) {
@@ -92,6 +138,9 @@ class Notifier(private val context: Context) {
     }
 
     companion object {
+        /** isCode says an event is a sign-in code from the codes monitor. */
+        fun isCode(e: Event): Boolean = e.key.startsWith("code:")
+
         /** tagOf names a notification after its events, one or a burst. */
         fun tagOf(events: List<Event>): String =
             if (events.size == 1) "event:${events[0].id}" else "burst:${events[0].id}"

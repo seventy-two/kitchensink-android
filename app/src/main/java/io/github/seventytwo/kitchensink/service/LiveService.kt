@@ -65,7 +65,9 @@ class LiveService : Service() {
 /** Starts the background connection after the phone restarts, if it's wanted. */
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
+        // After the phone starts, and after an update (which stops the
+        // service) so a new version keeps notifying without being opened.
+        if (intent.action != Intent.ACTION_BOOT_COMPLETED && intent.action != Intent.ACTION_MY_PACKAGE_REPLACED) return
         val hub = (context.applicationContext as KitchensinkApp).hub
         val c = hub.config.value
         if (c.background && c.configured) LiveService.start(context)

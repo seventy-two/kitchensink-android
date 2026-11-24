@@ -153,6 +153,8 @@ class Hub(private val context: Context, private val store: ConfigStore, private 
             }
             is Inbound.Ev -> {
                 val e = m.event
+                // A sign-in code's event rewritten without it: the code's expired.
+                if (Notifier.isCode(e) && e.body.isEmpty()) notifier.cancelCode(e)
                 noteNews(noteEvent(_news.value, e))
                 if (!dashboard.addEvent(e)) return
                 // History from before the app started has already been seen
